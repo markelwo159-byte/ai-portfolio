@@ -782,8 +782,33 @@ footer{
     rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
     roloTabBtns.forEach(function(b, i){ b.classList.toggle("active", i === liveStep); b.setAttribute("aria-selected", i === liveStep ? "true" : "false"); });
   }
-  function pause(){
+  var userPaused = false, autoKick = null, cardFull = false;
+  // is the whole card on screen, sitting in the upper three-quarters?
+  function inZone(){
+    var r = rolo.getBoundingClientRect();
+    return cardFull && r.top >= 0 && r.bottom <= window.innerHeight * 0.75;
+  }
+  function autoFlip(){
+    if(!inZone()){ stopAuto(); return; } // re-check right before every flip
+    flip(1, false);
+  }
+  function stopAuto(){
+    clearTimeout(autoKick); autoKick = null;
     if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
+  }
+  function startAuto(){
+    if(reduced || userPaused || autoKick || flowTimer) return;
+    // a short beat after it comes into view, then every five seconds
+    autoKick = setTimeout(function(){
+      autoKick = null;
+      if(!inZone()) return;
+      flip(1, false);
+      flowTimer = setInterval(autoFlip, 5000);
+    }, 1800);
+  }
+  function pause(){
+    userPaused = true;
+    stopAuto();
     flowHint.textContent = "Paused on this step. Swipe, click a step, or a tab, to compare another.";
   }
 
@@ -897,8 +922,28 @@ footer{
   }
   function flip(dir, userInteracted){ go(dir, liveStep + dir, userInteracted); }
 
-  if(!reduced){ flowTimer = setInterval(function(){ flip(1, false); }, 5000); }
-  else { flowHint.textContent = "Click a step, or a tab, to move through the steps."; }
+  /* auto-flip only while the whole card is on screen and sitting in the
+     upper three-quarters of it (its bottom edge at or above 75% of the
+     screen height); stop when it scrolls away, resume when it's back.
+     the position is measured against this page's own viewport, and an
+     observer confirms the card is fully on the actual screen, so it holds
+     inside the claude.ai viewer's frame too. */
+  if(!reduced){
+    var queueZone = function(){ if(inZone()) startAuto(); else stopAuto(); };
+    if("IntersectionObserver" in window){
+      new IntersectionObserver(function(entries){
+        entries.forEach(function(en){ cardFull = en.intersectionRatio >= 0.98; });
+        queueZone();
+      }, {threshold:[0, 0.5, 0.98, 1]}).observe(rolo);
+    } else {
+      cardFull = true;
+    }
+    window.addEventListener("scroll", queueZone, {passive:true});
+    window.addEventListener("resize", queueZone);
+    queueZone();
+  } else {
+    flowHint.textContent = "Click a step, or a tab, to move through the steps.";
+  }
 
   /* swipe: drag up lifts the bottom card toward you, drag down drops the
      top card. the flap follows your finger; let go past the threshold and

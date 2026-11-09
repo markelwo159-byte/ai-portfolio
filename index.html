@@ -38,7 +38,10 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;}
-html,body{height:100%;}
+/* body grows with the page: a fixed 100% body caps the sticky header's
+   range at one screen, after which it scrolled away */
+html{height:100%;}
+body{min-height:100%;}
 /* nothing on this page should ever pan sideways on a phone (the weld arc's glow
    ends at the screen edge on large phones); clip keeps the sticky header working */
 html,body{overflow-x:clip;}
@@ -66,6 +69,8 @@ header.top{
   background:#081222;backdrop-filter:blur(6px);
   z-index:5;
 }
+/* nav jumps land below the pinned bar, not under it */
+section[id],footer[id]{scroll-margin-top:64px;}
 header.top .mark{font-weight:600;letter-spacing:.04em;font-size:14px;}
 header.top nav{display:flex;gap:16px;font-size:13px;color:var(--muted);}
 header.top nav a{color:var(--muted);text-decoration:none;}

@@ -96,7 +96,9 @@ h2{
    click any one to stop the cycle and read it on your own time. ---------- */
 section.process{padding-block:10px 18px;}
 .workflowcard{background:var(--panel);border-radius:14px;padding:16px 16px 14px;}
-.rolostage{position:relative;display:flex;align-items:stretch;padding-right:34px;}
+/* a card object, not a banner: capped and centered so it keeps index-card
+   proportions on a wide screen instead of stretching into a thin strip */
+.rolostage{position:relative;display:flex;align-items:stretch;padding-right:34px;max-width:560px;margin:0 auto;}
 /* a real rolodex, modeled physically: two cards resting flat (title above
    the rings, blurb below), plus one double-sided flap. going forward, the
    flap starts as the bottom card (old blurb on its front), swings toward
@@ -194,7 +196,7 @@ section.process{padding-block:10px 18px;}
 }
 .rolo-tab:hover{filter:brightness(1.25);}
 .rolo-tab.active{background:var(--accent);border-color:var(--accent);color:#231405;transform:translateX(5px);}
-.flowhint{font-size:13px;color:var(--line);margin:10px 0 0;}
+.flowhint{font-size:13px;color:var(--line);margin:12px 0 0;text-align:center;}
 @media (max-width:680px){
   .rolo-sheet{--m:14px;padding:12px 14px 12px calc(var(--m) + 10px);}
   .rolo-title{font-size:18px;}
@@ -703,7 +705,9 @@ footer{
     text.className = "rolo-title";
     steps.forEach(function(s){ text.textContent = s.t; tallest = Math.max(tallest, probe.offsetHeight); });
     rolo.removeChild(probe);
-    rolo.style.setProperty("--rolo-h", (Math.max(64, tallest) * 2 + 6) + "px");
+    // never thinner than about 4.5:1 per half, however short the copy
+    var half = Math.max(64, Math.round(rolo.clientWidth * 0.22), tallest);
+    rolo.style.setProperty("--rolo-h", (half * 2 + 6) + "px");
     alignRules();
   }
 
@@ -1134,10 +1138,19 @@ footer{
 
   /* stage reveal: the tab list strikes in the first time it is actually seen */
   var revealed = false;
+  // a reload otherwise drops you back mid-page with the list already on
+  // screen, so it would fly in the moment the page opens
+  if("scrollRestoration" in history) history.scrollRestoration = "manual";
   if("IntersectionObserver" in window){
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
-        if(en.isIntersecting && !revealed){
+        // fire once the list's top has scrolled past 55% of the screen
+        // height (the rootMargin) AND a real slice of it is showing. the
+        // second check matters when this page runs inside a cross-origin
+        // frame (the claude.ai viewer): browsers ignore rootMargin there,
+        // so without it a single visible pixel would set it off.
+        var need = Math.min(80, en.boundingClientRect.height * 0.5);
+        if(en.isIntersecting && en.intersectionRect.height >= need && !revealed){
           revealed = true;
           Array.prototype.forEach.call(tabs.children, function(c,i){
             setTimeout(function(){ c.classList.add("reveal"); }, i*95);
@@ -1145,9 +1158,7 @@ footer{
           io.disconnect();
         }
       });
-    }, {threshold:0, rootMargin:"0px 0px -45% 0px"});
-    // fire once the top of the list has scrolled up past 55% of the screen
-    // height, so it lands as you scroll to it rather than on page load
+    }, {threshold:[0,.05,.1,.15,.2,.25,.3,.4,.5,.6,.7,.8,.9,1], rootMargin:"0px 0px -45% 0px"});
     io.observe(tabs);
 
   } else {

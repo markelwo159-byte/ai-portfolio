@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Weld &amp; Ship</title>
 </head>
-<body>
 <style>
 /* layout: short hero, one compact rotating "how I build" card (no stacked
    blocks), then an app style stage (tabs + animated schematic) as the
@@ -388,6 +387,18 @@ section.field{padding-block:14px 6px;}
 .ev-item a.go{font-size:14px;font-weight:600;color:var(--good);text-decoration:none;white-space:nowrap;}
 .ev-item a.go:hover,.ev-item a.go:focus-visible{text-decoration:underline;}
 .ev-item p{margin:2px 0 0;color:var(--muted);font-size:15px;line-height:1.5;max-width:62ch;width:100%;}
+/* the two customer rings, running live on the page */
+.ev-viewers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:30px;}
+.ev-viewer{margin:0;min-width:0;}
+.ev-frame{position:relative;height:340px;border-radius:12px;overflow:hidden;background:var(--bg2);}
+.ev-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;opacity:0;transition:opacity .7s ease;}
+.ev-frame.ready iframe{opacity:1;}
+.ev-frame.ready .ev-wait{display:none;}
+.ev-wait{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;}
+.ev-viewer figcaption{margin-top:10px;color:var(--muted);font-size:14.5px;line-height:1.5;}
+.ev-viewer figcaption b{color:var(--ink);font-weight:600;}
+@media (max-width:760px){.ev-viewers{grid-template-columns:1fr;}.ev-frame{height:290px;}}
+@media (prefers-reduced-motion:reduce){.ev-frame iframe{transition:none;}}
 
 footer{
   background:var(--panel);border-radius:14px;padding:20px 22px;margin-top:22px;
@@ -507,7 +518,7 @@ footer{
 
   <section class="field" id="field">
     <h2>Field evidence</h2>
-    <p class="section-sub">Not mockups. Click a link below to see any of these at work.</p>
+    <p class="section-sub">Not mockups. Every link below is live, and the two rings underneath are the actual models from custom orders, running on this page.</p>
     <div class="evidence">
       <div class="ev-item">
         <h3>Point West Pavilion</h3>
@@ -524,6 +535,22 @@ footer{
         <a class="go" href="https://yops-pendant.netlify.app" target="_blank" rel="noopener">yops-pendant.netlify.app &#8594;</a>
         <p>A live 3D viewer built for a custom order: a pendant directed through Claude from the first prompt through to the final model.</p>
       </div>
+    </div>
+    <div class="ev-viewers">
+      <figure class="ev-viewer">
+        <div class="ev-frame">
+          <span class="ev-wait">Loading 3D model&hellip;</span>
+          <iframe data-src="viewers/chevron/index.html" title="Chevron wedding set, live 3D model"></iframe>
+        </div>
+        <figcaption><b>Chevron wedding set.</b> A platinum band built to nest against the client's marquise engagement ring, shown together. Drag to turn.</figcaption>
+      </figure>
+      <figure class="ev-viewer">
+        <div class="ev-frame">
+          <span class="ev-wait">Loading 3D model&hellip;</span>
+          <iframe data-src="viewers/band/index.html" title="Black and white diamond band, live 3D model"></iframe>
+        </div>
+        <figcaption><b>Black &amp; White band.</b> A men's 8 mm platinum band with 15 diamonds, white across the top and black in the side plaques. Drag to turn.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -1250,6 +1277,38 @@ footer{
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });
   }
+
+  /* the two ring viewers download in the background once the page itself
+     has finished loading and the browser goes idle, one after the other,
+     so they never slow the first screen; by the time a reader scrolls
+     down to Field evidence they are usually already turning */
+  // each viewer renders only while its panel is on screen
+  var viewerSeen = new WeakMap();
+  function tellViewer(f){
+    if(f.contentWindow && !f.hasAttribute("data-src")) f.contentWindow.postMessage({pwpEmbed: viewerSeen.get(f) ? "play" : "pause"}, "*");
+  }
+  var viewerIO = "IntersectionObserver" in window ? new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ var f = en.target.querySelector("iframe"); viewerSeen.set(f, en.isIntersecting); tellViewer(f); });
+  }) : null;
+  // one at a time, each in an idle moment, so the model parse never lands on a running animation
+  function loadViewers(){
+    var f = document.querySelector(".ev-frame iframe[data-src]");
+    if(!f) return;
+    f.addEventListener("load", function(){
+      f.parentNode.classList.add("ready");
+      if(viewerIO) viewerIO.observe(f.parentNode); else { viewerSeen.set(f, true); tellViewer(f); }
+      tellViewer(f);
+      setTimeout(function(){ whenIdle(loadViewers); }, 1500);
+    }, {once:true});
+    f.src = f.getAttribute("data-src");
+    f.removeAttribute("data-src");
+  }
+  function whenIdle(fn){
+    if("requestIdleCallback" in window) requestIdleCallback(fn, {timeout:3000});
+    else setTimeout(fn, 1200);
+  }
+  if(document.readyState === "complete") whenIdle(loadViewers);
+  else window.addEventListener("load", function(){ whenIdle(loadViewers); });
 
   /* ambient embers drifting behind the whole page, a quiet constant instead of a static blueprint */
   var eCanvas = document.getElementById("emberLayer");

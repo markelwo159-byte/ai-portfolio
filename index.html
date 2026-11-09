@@ -392,13 +392,13 @@ section.field{padding-block:14px 6px;}
 .ev-viewer{margin:0;min-width:0;}
 .ev-frame{position:relative;height:340px;border-radius:12px;overflow:hidden;background:var(--bg2);}
 .ev-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;opacity:0;transition:opacity .7s ease;}
+.ev-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;pointer-events:none;transition:opacity .7s ease;}
 .ev-frame.ready iframe{opacity:1;}
-.ev-frame.ready .ev-wait{display:none;}
-.ev-wait{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;}
+.ev-frame.ready .ev-poster{opacity:0;}
 .ev-viewer figcaption{margin-top:10px;color:var(--muted);font-size:14.5px;line-height:1.5;}
 .ev-viewer figcaption b{color:var(--ink);font-weight:600;}
 @media (max-width:760px){.ev-viewers{grid-template-columns:1fr;}.ev-frame{height:290px;}}
-@media (prefers-reduced-motion:reduce){.ev-frame iframe{transition:none;}}
+@media (prefers-reduced-motion:reduce){.ev-frame iframe,.ev-poster{transition:none;}}
 
 footer{
   background:var(--panel);border-radius:14px;padding:20px 22px;margin-top:22px;
@@ -539,14 +539,14 @@ footer{
     <div class="ev-viewers">
       <figure class="ev-viewer">
         <div class="ev-frame">
-          <span class="ev-wait">Loading 3D model&hellip;</span>
+          <img class="ev-poster" src="viewers/chevron/poster.webp" alt="" width="1200" height="510" decoding="async">
           <iframe data-src="viewers/chevron/index.html" title="Chevron wedding set, live 3D model"></iframe>
         </div>
         <figcaption><b>Chevron wedding set.</b> A platinum band built to nest against the client's marquise engagement ring, shown together. Fully constructed in CAD by Claude. Drag to turn.</figcaption>
       </figure>
       <figure class="ev-viewer">
         <div class="ev-frame">
-          <span class="ev-wait">Loading 3D model&hellip;</span>
+          <img class="ev-poster" src="viewers/band/poster.webp" alt="" width="1200" height="510" decoding="async">
           <iframe data-src="viewers/band/index.html" title="Black and white diamond band, live 3D model"></iframe>
         </div>
         <figcaption><b>Black &amp; White band.</b> A men's 8 mm platinum band with 15 diamonds, white across the top and black in the side plaques. Fully constructed in CAD by Claude. Drag to turn.</figcaption>
@@ -1242,13 +1242,11 @@ footer{
      viewport, measured directly, and (2) an observer confirming a real
      slice of the list is on the actual screen, which still holds when the
      frame is sized to the whole page and never scrolls itself. */
-  var flyDone = false;
   function revealTabs(){
     revealed = true;
     Array.prototype.forEach.call(tabs.children, function(c,i){
       setTimeout(function(){ c.classList.add("reveal"); }, i*95);
     });
-    setTimeout(function(){ flyDone = true; }, tabs.children.length * 95 + 900);
   }
   if("IntersectionObserver" in window){
     var onScreen = false, checkQueued = false, io;
@@ -1278,51 +1276,67 @@ footer{
 
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });
-    flyDone = true;
   }
 
-  /* the two ring viewers: their model files download in the background as
-     soon as the page has loaded (network only, no main-thread cost), but a
-     viewer is only started -- which parses ~5 MB and builds the mesh, a
-     short freeze -- once the list has finished flying in and the reader has
-     stopped scrolling, so that freeze never lands on an animation */
-  // each viewer renders only while its panel is on screen
-  var viewerSeen = new WeakMap();
+  /* the two ring viewers. Each panel shows a still poster (a frame rendered
+     from the model itself) from the start, and the model files download in
+     the background once the page has loaded (network only). A viewer is only
+     started -- a short main-thread freeze while it builds the mesh -- when its
+     own panel is at least half on screen and scrolling has stopped, so the
+     freeze lands on a still picture, never on another animation; the poster
+     then crossfades into the turning ring. Each one renders only while its
+     panel is on screen. */
+  var viewerFrames = Array.prototype.slice.call(document.querySelectorAll(".ev-frame"));
+  var viewerSeen = new WeakMap(), viewerHalf = new WeakMap(), viewerBusy = null, lastScroll = 0;
+  function iframeOf(fr){ return fr.querySelector("iframe"); }
   function tellViewer(f){
     if(f.contentWindow && !f.hasAttribute("data-src")) f.contentWindow.postMessage({pwpEmbed: viewerSeen.get(f) ? "play" : "pause"}, "*");
   }
-  var viewerIO = "IntersectionObserver" in window ? new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ var f = en.target.querySelector("iframe"); viewerSeen.set(f, en.isIntersecting); tellViewer(f); });
-  }) : null;
-  // one at a time, each in an idle moment, so the model parse never lands on a running animation
-  function loadViewers(){
-    var f = document.querySelector(".ev-frame iframe[data-src]");
-    if(!f) return;
-    f.addEventListener("load", function(){
-      f.parentNode.classList.add("ready");
-      if(viewerIO) viewerIO.observe(f.parentNode); else { viewerSeen.set(f, true); tellViewer(f); }
-      tellViewer(f);
-      setTimeout(function(){ whenCalm(loadViewers); }, 1500);
-    }, {once:true});
+  function startViewer(f){
+    viewerBusy = f;
+    f.addEventListener("load", function(){ tellViewer(f); }, {once:true});
     f.src = f.getAttribute("data-src");
     f.removeAttribute("data-src");
+    // never let one viewer hold up the other for good
+    setTimeout(function(){ if(viewerBusy === f) viewerBusy = null; }, 8000);
   }
-  var lastScroll = 0;
+  window.addEventListener("message", function(e){
+    if(!e.data || !e.data.pwpEmbedDrawn) return;
+    viewerFrames.forEach(function(fr){
+      if(iframeOf(fr).contentWindow !== e.source) return;
+      fr.classList.add("ready");
+      if(viewerBusy === iframeOf(fr)) viewerBusy = null;
+    });
+  });
   window.addEventListener("scroll", function(){ lastScroll = performance.now(); }, {passive:true});
-  function whenCalm(fn){
-    (function wait(){
-      if(flyDone && performance.now() - lastScroll > 700) fn();
-      else setTimeout(wait, 250);
-    })();
+  var viewerPoll = setInterval(function(){
+    var waiting = viewerFrames.filter(function(fr){ return iframeOf(fr).hasAttribute("data-src"); });
+    if(!waiting.length){ clearInterval(viewerPoll); return; }
+    if(viewerBusy || performance.now() - lastScroll < 400) return;
+    for(var i = 0; i < waiting.length; i++){
+      if(viewerHalf.get(iframeOf(waiting[i]))){ startViewer(iframeOf(waiting[i])); return; }
+    }
+  }, 250);
+  if("IntersectionObserver" in window){
+    var viewerIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var f = iframeOf(en.target);
+        viewerSeen.set(f, en.isIntersecting);
+        viewerHalf.set(f, en.intersectionRatio >= 0.5);
+        tellViewer(f);
+      });
+    }, {threshold:[0, .5]});
+    viewerFrames.forEach(function(fr){ viewerIO.observe(fr); });
+  } else {
+    viewerFrames.forEach(function(fr){ viewerSeen.set(iframeOf(fr), true); viewerHalf.set(iframeOf(fr), true); });
   }
   function prefetchViewers(){
     ["viewers/chevron/ch_model.js", "viewers/chevron/rt_diamonds.js", "viewers/band/band_model.js"].forEach(function(u){
       try { fetch(u).catch(function(){}); } catch(e){}
     });
   }
-  function afterLoad(){ setTimeout(prefetchViewers, 1200); whenCalm(loadViewers); }
-  if(document.readyState === "complete") afterLoad();
-  else window.addEventListener("load", afterLoad);
+  if(document.readyState === "complete") setTimeout(prefetchViewers, 1200);
+  else window.addEventListener("load", function(){ setTimeout(prefetchViewers, 1200); });
 
   /* ambient embers drifting behind the whole page, a quiet constant instead of a static blueprint */
   var eCanvas = document.getElementById("emberLayer");

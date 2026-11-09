@@ -87,7 +87,7 @@ h1.headline .weldwrap{position:relative;display:inline-block;}
   h1.headline.weld-ready .accent{
     background-image:linear-gradient(90deg,var(--accent) 0%,var(--accent) 50%,#ff9d45 57%,#ffc871 62%,#ffeab8 65.5%,#fff 66.6%,#fff 100%);
     background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
-    animation:migReveal 3.6s linear .3s both,migHeat 3.6s linear .3s both,migGlow 3.6s ease-out .3s both;
+    animation:migReveal 3.6s linear 1s both,migHeat 3.6s linear 1s both,migGlow 3.6s ease-out 1s both;
   }
 }
 @keyframes migReveal{
@@ -108,7 +108,7 @@ h1.headline .weldwrap{position:relative;display:inline-block;}
 .torch::after{content:"";position:absolute;left:-46px;top:-46px;width:92px;height:92px;border-radius:50%;
   background:radial-gradient(circle,rgba(255,252,240,.95) 0%,rgba(255,205,130,.5) 28%,rgba(255,138,61,0) 68%);
   animation:migFlicker .11s steps(2,end) infinite;}
-.torch.go{animation:migArc 3.6s linear .3s both;}
+.torch.go{animation:migArc 3.6s linear 1s both;}
 @keyframes migArc{0%{left:0;opacity:0;}1.5%{opacity:1;}66.6%{left:100%;opacity:1;}70%,100%{left:100%;opacity:0;}}
 @keyframes migFlicker{0%{opacity:1;transform:scale(1);}50%{opacity:.68;transform:scale(.82);}}
 @media (prefers-reduced-motion:reduce){
@@ -1503,7 +1503,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
 
   /* hero weld-in: only the orange accent words get MIG welded into place,
      the rest of the headline is just there, already readable. the arc
-     throws spatter the whole way across (same 0.3s delay and 2.4s travel
+     throws spatter the whole way across (same 1s delay and 2.4s travel
      as the CSS timeline). */
   var headline = document.getElementById("headline");
   requestAnimationFrame(function(){
@@ -1511,7 +1511,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
     var accentEl = headline.querySelector(".accent");
     headline.querySelector(".torch").classList.add("go");
     if(reduced || !ctx) return;
-    var DELAY = 300, TRAVEL = 2400;
+    var DELAY = 1000, TRAVEL = 2400;
     setTimeout(function(){
       var t0 = performance.now(), parts = [];
       function tick(now){

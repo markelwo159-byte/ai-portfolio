@@ -1242,11 +1242,13 @@ footer{
      viewport, measured directly, and (2) an observer confirming a real
      slice of the list is on the actual screen, which still holds when the
      frame is sized to the whole page and never scrolls itself. */
+  var flyDone = false;
   function revealTabs(){
     revealed = true;
     Array.prototype.forEach.call(tabs.children, function(c,i){
       setTimeout(function(){ c.classList.add("reveal"); }, i*95);
     });
+    setTimeout(function(){ flyDone = true; }, tabs.children.length * 95 + 900);
   }
   if("IntersectionObserver" in window){
     var onScreen = false, checkQueued = false, io;
@@ -1276,12 +1278,14 @@ footer{
 
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });
+    flyDone = true;
   }
 
-  /* the two ring viewers download in the background once the page itself
-     has finished loading and the browser goes idle, one after the other,
-     so they never slow the first screen; by the time a reader scrolls
-     down to Field evidence they are usually already turning */
+  /* the two ring viewers: their model files download in the background as
+     soon as the page has loaded (network only, no main-thread cost), but a
+     viewer is only started -- which parses ~5 MB and builds the mesh, a
+     short freeze -- once the list has finished flying in and the reader has
+     stopped scrolling, so that freeze never lands on an animation */
   // each viewer renders only while its panel is on screen
   var viewerSeen = new WeakMap();
   function tellViewer(f){
@@ -1298,17 +1302,27 @@ footer{
       f.parentNode.classList.add("ready");
       if(viewerIO) viewerIO.observe(f.parentNode); else { viewerSeen.set(f, true); tellViewer(f); }
       tellViewer(f);
-      setTimeout(function(){ whenIdle(loadViewers); }, 1500);
+      setTimeout(function(){ whenCalm(loadViewers); }, 1500);
     }, {once:true});
     f.src = f.getAttribute("data-src");
     f.removeAttribute("data-src");
   }
-  function whenIdle(fn){
-    if("requestIdleCallback" in window) requestIdleCallback(fn, {timeout:3000});
-    else setTimeout(fn, 1200);
+  var lastScroll = 0;
+  window.addEventListener("scroll", function(){ lastScroll = performance.now(); }, {passive:true});
+  function whenCalm(fn){
+    (function wait(){
+      if(flyDone && performance.now() - lastScroll > 700) fn();
+      else setTimeout(wait, 250);
+    })();
   }
-  if(document.readyState === "complete") whenIdle(loadViewers);
-  else window.addEventListener("load", function(){ whenIdle(loadViewers); });
+  function prefetchViewers(){
+    ["viewers/chevron/ch_model.js", "viewers/chevron/rt_diamonds.js", "viewers/band/band_model.js"].forEach(function(u){
+      try { fetch(u).catch(function(){}); } catch(e){}
+    });
+  }
+  function afterLoad(){ setTimeout(prefetchViewers, 1200); whenCalm(loadViewers); }
+  if(document.readyState === "complete") afterLoad();
+  else window.addEventListener("load", afterLoad);
 
   /* ambient embers drifting behind the whole page, a quiet constant instead of a static blueprint */
   var eCanvas = document.getElementById("emberLayer");

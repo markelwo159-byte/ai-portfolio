@@ -39,6 +39,9 @@
 }
 *{box-sizing:border-box;}
 html,body{height:100%;}
+/* nothing on this page should ever pan sideways on a phone (the weld arc's glow
+   ends at the screen edge on large phones); clip keeps the sticky header working */
+html,body{overflow-x:clip;}
 body{
   margin:0;
   background:
@@ -1509,7 +1512,10 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
   requestAnimationFrame(function(){
     headline.classList.add("weld-ready");
     var accentEl = headline.querySelector(".accent");
-    headline.querySelector(".torch").classList.add("go");
+    var torch = headline.querySelector(".torch");
+    torch.classList.add("go");
+    // gone once the weld is done, so its faded glow can't widen the page
+    torch.addEventListener("animationend", function(){ torch.remove(); }, {once:true});
     if(reduced || !ctx) return;
     var DELAY = 1000, TRAVEL = 2400;
     setTimeout(function(){

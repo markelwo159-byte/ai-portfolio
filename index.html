@@ -125,8 +125,8 @@ section.process{padding-block:10px 18px;}
 .rolo-half.dragging{transition:none;}
 .rolo-halfstage.top .rolo-half{border-radius:12px;transform-origin:center bottom;box-shadow:0 2px 4px rgba(0,0,0,.3);}
 .rolo-halfstage.bottom .rolo-half{border-radius:12px;transform-origin:center top;box-shadow:0 -2px 4px rgba(0,0,0,.3);}
-.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;text-align:center;}
-.rolo-blurb{color:var(--muted);font-size:15px;line-height:1.5;text-align:center;}
+.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;text-align:center;transition:opacity .3s ease;}
+.rolo-blurb{color:var(--muted);font-size:15px;line-height:1.5;text-align:center;transition:opacity .3s ease;}
 /* the seam between the two card halves, and the two binder rings it hangs
    on; fixed in place, above the flipping faces, since the rings don't rotate */
 .rolo-fold{position:absolute;left:0;right:0;top:50%;height:0;z-index:5;pointer-events:none;}
@@ -155,7 +155,7 @@ section.process{padding-block:10px 18px;}
   .rolostage{padding-right:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
-@media (prefers-reduced-motion:reduce){.rolo-half{transition:none;}}
+@media (prefers-reduced-motion:reduce){.rolo-half,.rolo-title,.rolo-blurb{transition:none;}}
 
 /* ---------- watch it work: a tiny storyboard, not a diagram ---------- */
 section.demo{padding-block:4px 22px;}
@@ -606,13 +606,15 @@ footer{
   var N = steps.length;
   var rolo = document.getElementById("rolo");
   var flowHint = document.getElementById("flowHint");
-  // two independently hinged halves, each with its own front/back pair;
-  // both pairs always carry the same rotation, so they fold in lockstep
+  // real split-flap displays only ever move ONE half: going forward, the
+  // top half falls and the bottom half's new content is already waiting,
+  // static, underneath. going back, it's the mirror -- the bottom half
+  // rises and the top sits still. each half keeps its own independent
+  // front/back pair so it can do that falling flip on its own turn.
   var topFaces = [document.getElementById("roloTopA"), document.getElementById("roloTopB")];
   var botFaces = [document.getElementById("roloBotA"), document.getElementById("roloBotB")];
-  var allFaces = topFaces.concat(botFaces);
-  var inherent = [0, 180]; // each face's own baseline rotation
-  var rotation = 0; // multiple of 180; which physical face is up front
+  var inherent = [0, 180];
+  var topRot = 0, botRot = 0; // each a multiple of 180, independent of each other
   var liveStep = 0;
   var flowTimer = null;
 
@@ -625,7 +627,7 @@ footer{
     b.setAttribute("role","tab");
     b.setAttribute("aria-selected", i===0 ? "true" : "false");
     b.setAttribute("aria-label", "Jump to " + s.t);
-    b.addEventListener("click", function(e){ e.stopPropagation(); goTo(i, true); });
+    b.addEventListener("click", function(e){ e.stopPropagation(); goTo(i, true, 1); });
     tabsEl.appendChild(b);
     return b;
   });
@@ -635,37 +637,43 @@ footer{
   setTopContent(topFaces[0], 0); setBotContent(botFaces[0], 0);
   setTopContent(topFaces[1], 1); setBotContent(botFaces[1], 1);
 
-  function render(extraDeg){
+  function frontIdx(rot){ return (((Math.round(rot/180) % 2) + 2) % 2); }
+
+  function renderTop(extraDeg){
     var e = extraDeg || 0;
-    // the top half and bottom half spin in OPPOSITE directions around the
-    // shared seam. spinning them the same way is geometrically identical to
-    // one rigid plane rotating about that line -- no crease ever shows.
-    // opposite signs make them visibly splay apart mid-flip, like a hinge.
-    topFaces.forEach(function(f, i){
-      f.style.transform = "rotateX(" + (rotation + e + inherent[i]) + "deg)";
-    });
-    botFaces.forEach(function(f, i){
-      f.style.transform = "rotateX(" + (-(rotation + e) + inherent[i]) + "deg)";
-    });
+    topFaces.forEach(function(f, i){ f.style.transform = "rotateX(" + (-(topRot + e) + inherent[i]) + "deg)"; });
   }
-  render(0);
+  function renderBot(extraDeg){
+    var e = extraDeg || 0;
+    botFaces.forEach(function(f, i){ f.style.transform = "rotateX(" + (botRot + e + inherent[i]) + "deg)"; });
+  }
+  renderTop(0); renderBot(0);
 
-  function visibleFaceIndex(){
-    return (((Math.round(rotation/180) % 2) + 2) % 2);
+  function fadeContent(el, newText){
+    if(reduced){ el.textContent = newText; return; }
+    el.style.opacity = 0;
+    setTimeout(function(){ el.textContent = newText; el.style.opacity = 1; }, 150);
   }
 
-  /* goTo writes the target step directly into whichever face is about to
-     become the front face, then flips to it -- so it works exactly the same
-     whether the target is the next step (auto-play, swipe) or an arbitrary
-     tab (direct jump), and two flips in quick succession can never race. */
-  function goTo(targetIdx, userInteracted, spin){
+  /* goTo moves to targetIdx. direction decides which half actually flips:
+     +1 falls the top half forward; -1 raises the bottom half. the other
+     half never rotates -- its text just crossfades, like a waiting vane. */
+  function goTo(targetIdx, userInteracted, direction){
     targetIdx = ((targetIdx % N) + N) % N;
-    rotation += 180 * (spin || 1);
-    var frontIdx = visibleFaceIndex();
-    setTopContent(topFaces[frontIdx], targetIdx);
-    setBotContent(botFaces[frontIdx], targetIdx);
+    if(direction >= 0){
+      topRot -= 180;
+      var tIdx = frontIdx(topRot);
+      setTopContent(topFaces[tIdx], targetIdx);
+      renderTop(0);
+      fadeContent(botFaces[frontIdx(botRot)].querySelector(".rolo-blurb"), steps[targetIdx].d);
+    } else {
+      botRot += 180;
+      var bIdx = frontIdx(botRot);
+      setBotContent(botFaces[bIdx], targetIdx);
+      renderBot(0);
+      fadeContent(topFaces[frontIdx(topRot)].querySelector(".rolo-title"), steps[targetIdx].t);
+    }
     liveStep = targetIdx;
-    render(0);
     rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
     roloTabBtns.forEach(function(b, i){ b.classList.toggle("active", i === liveStep); b.setAttribute("aria-selected", i === liveStep ? "true" : "false"); });
     if(userInteracted){
@@ -681,33 +689,36 @@ footer{
   if(!reduced){ flowTimer = setInterval(function(){ flip(1, false); }, 5000); }
   else { flowHint.textContent = "Click a step, or a tab, to move through the steps."; }
 
-  /* swipe to flip */
-  var dragging = false, dragStartY = 0;
+  /* swipe to flip -- only the half matching the live drag direction
+     previews any motion; the other half stays put, untouched */
+  var dragging = false, dragStartY = 0, dragDir = 1;
   rolo.addEventListener("pointerdown", function(e){
-    dragging = true; dragStartY = e.clientY;
+    dragging = true; dragStartY = e.clientY; dragDir = 1;
     if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-    allFaces.forEach(function(f){ f.classList.add("dragging"); });
+    topFaces.concat(botFaces).forEach(function(f){ f.classList.add("dragging"); });
     rolo.setPointerCapture(e.pointerId);
   });
   rolo.addEventListener("pointermove", function(e){
     if(!dragging) return;
-    var dy = dragStartY - e.clientY; // drag up: card rolls away, like flicking a rolodex card over
+    var dy = dragStartY - e.clientY; // drag up: falls forward, like flicking a card over
     var extra = Math.max(-140, Math.min(140, dy * 1.1));
-    render(extra);
+    dragDir = dy >= 0 ? 1 : -1;
+    if(dragDir > 0){ renderTop(extra); renderBot(0); }
+    else { renderBot(extra); renderTop(0); }
   });
   function endSwipe(e){
     if(!dragging) return;
     dragging = false;
-    allFaces.forEach(function(f){ f.classList.remove("dragging"); });
+    topFaces.concat(botFaces).forEach(function(f){ f.classList.remove("dragging"); });
     var dy = dragStartY - e.clientY;
     if(Math.abs(dy) < 6){
-      render(0);
+      renderTop(0); renderBot(0);
       flowHint.textContent = "Paused on this step. Swipe, click a step, or a tab, to compare another.";
       if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
       return;
     }
     if(Math.abs(dy) > 40){ flip(dy > 0 ? 1 : -1, true); }
-    else { render(0); }
+    else { renderTop(0); renderBot(0); }
   }
   rolo.addEventListener("pointerup", endSwipe);
   rolo.addEventListener("pointercancel", endSwipe);

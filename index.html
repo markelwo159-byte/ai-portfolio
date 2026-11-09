@@ -115,15 +115,21 @@ section.process{padding-block:10px 18px;}
 .rolo-card.bottom,.rolo-flap.down{bottom:0;}
 /* a yellow index card: ruled blue lines, a red margin rule, a soft paper
    sheen, and dark ink on top */
+/* the writing sits on the ruled lines: line-height equals the rule pitch
+   (--L), and --rule-y (set in JS from each card's measured baseline)
+   slides the rules so every line of text lands on one */
 .rolo-sheet{
-  --m:21px;
+  --m:21px;--L:20px;
   border:1px solid #d9c46a;border-radius:5px;overflow:hidden;
   background:
     linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(120,90,0,.12) 100%),
     linear-gradient(90deg, transparent var(--m), rgba(214,72,72,.45) var(--m) calc(var(--m) + 1px), transparent calc(var(--m) + 1px)),
-    repeating-linear-gradient(180deg, transparent 0 17px, rgba(74,112,170,.28) 17px 18px),
+    linear-gradient(180deg, transparent calc(var(--L) - 1px), rgba(74,112,170,.32) calc(var(--L) - 1px)),
     #f8e99a;
-  display:flex;align-items:center;justify-content:center;padding:14px 26px 14px calc(var(--m) + 13px);
+  background-size:100% 100%, 100% 100%, 100% var(--L);
+  background-position:0 0, 0 0, 0 var(--rule-y,0px);
+  background-repeat:no-repeat, no-repeat, repeat;
+  display:flex;align-items:center;justify-content:flex-start;padding:14px 22px 14px calc(var(--m) + 12px);
 }
 /* the two punched holes each card hangs by, on its hinge edge, lined up
    with the rings; you see the dark panel through them */
@@ -156,8 +162,8 @@ section.process{padding-block:10px 18px;}
    a bare rotateX reads as flat paper sliding */
 .rolo-face::after{content:"";position:absolute;inset:0;background:#3b2805;opacity:var(--shade,0);pointer-events:none;}
 /* rolodex cards were typed: a typewriter face for the step name */
-.rolo-title{font-family:"Courier Prime","Courier New",Courier,monospace;font-weight:700;font-size:21px;color:#1c2640;letter-spacing:.08em;text-transform:uppercase;text-align:center;} /* taste-skill-ignore: a typed index card label, the typewriter face is the subject */
-.rolo-blurb{color:#3f3a2a;font-size:15px;line-height:1.5;text-align:center;}
+.rolo-title{font-family:"Courier Prime","Courier New",Courier,monospace;font-weight:700;font-size:21px;line-height:var(--L);color:#1c2640;letter-spacing:.08em;text-transform:uppercase;} /* taste-skill-ignore: a typed index card label, the typewriter face is the subject */
+.rolo-blurb{color:#3f3a2a;font-size:15px;line-height:var(--L);}
 /* the seam between the two card halves, and the two binder rings it hangs
    on; fixed in place, above the flipping faces, since the rings don't rotate */
 .rolo-fold{position:absolute;left:0;right:0;top:50%;height:0;z-index:5;pointer-events:none;}
@@ -192,7 +198,7 @@ section.process{padding-block:10px 18px;}
 @media (max-width:680px){
   .rolo-sheet{--m:14px;padding:12px 14px 12px calc(var(--m) + 10px);}
   .rolo-title{font-size:18px;}
-  .rolo-blurb{font-size:14px;line-height:1.45;}
+  .rolo-blurb{font-size:14px;}
   .rolostage{padding-right:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
@@ -278,17 +284,34 @@ section.stage{padding-block:4px 20px;}
 .tab[aria-selected="true"]{background:var(--panel-2);}
 .tab[aria-selected="true"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
 .tab[aria-selected="true"] .ic{color:var(--accent);}
-.tab{opacity:0;transform:translateY(10px);}
-.tab.reveal{animation:tabin .5s ease both;}
-@keyframes tabin{to{opacity:1;transform:translateY(0);}}
+/* the system list arrives like parts off a line: each option shoots in
+   from the side, overshoots, settles, and flashes as it lands */
+.tab{opacity:0;transform:translateX(-115%);}
+.tab.reveal{animation:tabFly .7s cubic-bezier(.2,.85,.3,1) both;}
+.tab.reveal::after{content:"";position:absolute;inset:0;background:var(--accent);opacity:0;pointer-events:none;animation:tabLand .7s ease-out both;}
+@keyframes tabFly{
+  0%{opacity:0;transform:translateX(-115%) skewX(-10deg);}
+  55%{opacity:1;transform:translateX(4%) skewX(4deg);}
+  75%{transform:translateX(-1.5%) skewX(-1.5deg);}
+  100%{opacity:1;transform:none;}
+}
+@keyframes tabFlyR{
+  0%{opacity:0;transform:translateX(115%) skewX(10deg);}
+  55%{opacity:1;transform:translateX(-4%) skewX(-4deg);}
+  75%{transform:translateX(1.5%) skewX(1.5deg);}
+  100%{opacity:1;transform:none;}
+}
+@keyframes tabLand{0%,50%{opacity:0;}60%{opacity:.28;}100%{opacity:0;}}
 @media (prefers-reduced-motion:reduce){
   .tab{opacity:1;transform:none;}
-  .tab.reveal{animation:none;}
+  .tab.reveal,.tab.reveal::after{animation:none;}
 }
 
 @media (max-width:760px){
   .tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;}
   .tab{padding:11px 12px;}
+  .tab:nth-child(even){transform:translateX(115%);}
+  .tab.reveal:nth-child(even){animation-name:tabFlyR;}
   .tab .tt span{display:none;}
   .tab .tt b{white-space:normal;}
 }
@@ -639,12 +662,12 @@ footer{
      it auto-flips to the next step on a timer, and a real swipe (or an
      arrow key, or a click) flips it early, in either direction. */
   var steps = [
-    {t:"Scope",d:"Define exactly what the system must do, and just as precisely, what it must never do, before a single line gets built."},
-    {t:"Direct",d:"Specify the architecture and the edge cases in full, then let Claude build to that specification. I am directing the build, not typing it line by line."},
-    {t:"Review",d:"Read every line of what it actually produced. Trusting output without reading it is how defects reach production."},
-    {t:"Stress test",d:"Push it past the easy path on purpose, exercising empty states, malformed input, degraded connections, and outright failure modes."},
-    {t:"Verify",d:"Confirm the system actually works under real conditions: physical devices, both color themes, reduced motion settings, and a console with zero errors."},
-    {t:"Ship",d:"Deploy to run unattended in production, with monitoring in place to know the moment it fails."}
+    {t:"Scope",d:"Define the requirements, the constraints, and the conditions under which the system must fail safely, before any code is written."},
+    {t:"Direct",d:"Specify the architecture and every edge case in full. Claude implements against that specification."},
+    {t:"Review",d:"Every line of generated code is read and checked against the specification before it moves forward."},
+    {t:"Stress test",d:"Exercise empty states, malformed input, degraded connections, and failure paths, not only the expected case."},
+    {t:"Verify",d:"Validate on physical devices, in both color themes and with reduced motion, with a clean console."},
+    {t:"Ship",d:"Deploy to run unattended in production, with monitoring and alerts on any failure."}
   ];
   var N = steps.length;
   var rolo = document.getElementById("rolo");
@@ -681,6 +704,24 @@ footer{
     steps.forEach(function(s){ text.textContent = s.t; tallest = Math.max(tallest, probe.offsetHeight); });
     rolo.removeChild(probe);
     rolo.style.setProperty("--rolo-h", (Math.max(64, tallest) * 2 + 6) + "px");
+    alignRules();
+  }
+
+  /* find where the first line of writing actually sits on each card and
+     slide that card's rules so the baseline lands on one; every later line
+     follows, since the line height equals the rule pitch */
+  function alignRules(){
+    rolo.querySelectorAll(".rolo-sheet").forEach(function(sheet){
+      var text = sheet.firstElementChild;
+      if(!text) return;
+      var mark = document.createElement("span");
+      mark.style.cssText = "display:inline-block;width:0;height:0;";
+      text.insertBefore(mark, text.firstChild);
+      var base = mark.offsetTop; // the sheet is absolutely positioned, so it is the offset parent
+      text.removeChild(mark);
+      var L = parseFloat(getComputedStyle(sheet).getPropertyValue("--L")) || 20;
+      sheet.style.setProperty("--rule-y", (((base + 2 - L) % L) + L) % L + "px");
+    });
   }
   sizeRolo();
   var sizeQueued = false;
@@ -759,6 +800,7 @@ footer{
       faceText(flap, "back").textContent = steps[target].d;
       topText.textContent = steps[target].t;
     }
+    alignRules();
     flap.classList.add("instant", "live");
     flap.style.transform = "rotateX(0deg)";
     void flap.offsetWidth;
@@ -789,6 +831,7 @@ footer{
       if(active && active.done === done) active = null;
       if(dir > 0) topText.textContent = steps[target].t;
       else botText.textContent = steps[target].d;
+      alignRules();
       stow(flap, dir);
     }
     active = { done: done };
@@ -807,6 +850,7 @@ footer{
       stow(flap, dir);
       if(dir > 0) botText.textContent = steps[liveStep].d;
       else topText.textContent = steps[liveStep].t;
+      alignRules();
     }
     active = { done: done };
   }
@@ -818,6 +862,7 @@ footer{
       liveStep = target;
       topText.textContent = steps[target].t;
       botText.textContent = steps[target].d;
+      alignRules();
       markStep();
       if(userInteracted) pause();
       return;
@@ -1095,13 +1140,14 @@ footer{
         if(en.isIntersecting && !revealed){
           revealed = true;
           Array.prototype.forEach.call(tabs.children, function(c,i){
-            setTimeout(function(){ c.classList.add("reveal"); }, i*70);
+            setTimeout(function(){ c.classList.add("reveal"); }, i*95);
           });
           io.disconnect();
         }
       });
-    }, {threshold:.3});
-    io.observe(document.getElementById("stage"));
+    }, {threshold:.25});
+    io.observe(tabs); // fire when the list itself is reached, not the whole stage
+
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });
   }

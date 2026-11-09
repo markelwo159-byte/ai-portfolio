@@ -104,7 +104,7 @@ section.process{padding-block:10px 18px;}
    top card -- its back side carries the new title, so it covers the old
    one. one perspective, centered on the hinge, so the swing has real depth. */
 .rolo{
-  position:relative;flex:1;height:148px;touch-action:none;cursor:grab;min-width:0;
+  position:relative;flex:1;height:var(--rolo-h,148px);touch-action:none;cursor:grab;min-width:0;
   -webkit-user-select:none;user-select:none;
   perspective:650px;perspective-origin:50% 50%;
 }
@@ -116,14 +116,25 @@ section.process{padding-block:10px 18px;}
 /* a yellow index card: ruled blue lines, a red margin rule, a soft paper
    sheen, and dark ink on top */
 .rolo-sheet{
+  --m:21px;
   border:1px solid #d9c46a;border-radius:5px;overflow:hidden;
   background:
     linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(120,90,0,.12) 100%),
-    linear-gradient(90deg, transparent 21px, rgba(214,72,72,.45) 21px 22px, transparent 22px),
+    linear-gradient(90deg, transparent var(--m), rgba(214,72,72,.45) var(--m) calc(var(--m) + 1px), transparent calc(var(--m) + 1px)),
     repeating-linear-gradient(180deg, transparent 0 17px, rgba(74,112,170,.28) 17px 18px),
     #f8e99a;
-  display:flex;align-items:center;justify-content:center;padding:8px 26px 8px 34px;
+  display:flex;align-items:center;justify-content:center;padding:14px 26px 14px calc(var(--m) + 13px);
 }
+/* the two punched holes each card hangs by, on its hinge edge, lined up
+   with the rings; you see the dark panel through them */
+.rolo-sheet::before{
+  content:"";position:absolute;left:0;right:0;height:10px;pointer-events:none;
+  background:
+    radial-gradient(5px 3.5px at 30% 50%, #0b1626 85%, rgba(11,22,38,0) 100%),
+    radial-gradient(5px 3.5px at 70% 50%, #0b1626 85%, rgba(11,22,38,0) 100%);
+}
+.rolo-sheet.hole-top::before{top:1px;}
+.rolo-sheet.hole-bot::before{bottom:1px;}
 .rolo-card{z-index:1;box-shadow:0 2px 6px rgba(0,0,0,.45);}
 /* shadow the swinging flap throws onto the card it is about to land on;
    --cast is set every frame from the flap's measured angle */
@@ -144,7 +155,8 @@ section.process{padding-block:10px 18px;}
    settles (--shade, set every frame from the measured angle); without it
    a bare rotateX reads as flat paper sliding */
 .rolo-face::after{content:"";position:absolute;inset:0;background:#3b2805;opacity:var(--shade,0);pointer-events:none;}
-.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#1c2640;letter-spacing:.01em;text-align:center;}
+/* rolodex cards were typed: a typewriter face for the step name */
+.rolo-title{font-family:"Courier Prime","Courier New",Courier,monospace;font-weight:700;font-size:21px;color:#1c2640;letter-spacing:.08em;text-transform:uppercase;text-align:center;} /* taste-skill-ignore: a typed index card label, the typewriter face is the subject */
 .rolo-blurb{color:#3f3a2a;font-size:15px;line-height:1.5;text-align:center;}
 /* the seam between the two card halves, and the two binder rings it hangs
    on; fixed in place, above the flipping faces, since the rings don't rotate */
@@ -153,14 +165,19 @@ section.process{padding-block:10px 18px;}
   position:absolute;left:0;right:0;top:-6px;height:12px;
   background:radial-gradient(ellipse at center, rgba(0,0,0,.7), rgba(0,0,0,.55) 25%, rgba(0,0,0,0) 78%);
 }
+/* each ring is a steel loop threaded through a hole in both cards: the
+   part you see is the run in front of the paper, from one hole across the
+   gap to the other, shaded round like wire and darkening where it bends
+   back into each hole */
 .rolo-ring{
-  position:absolute;top:-7.5px;width:15px;height:15px;border-radius:50%;
-  border:3px solid var(--muted);
-  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.4), rgba(255,255,255,0) 55%), var(--bg);
-  box-shadow:0 1px 3px rgba(0,0,0,.5);
+  position:absolute;top:-12px;width:7px;height:24px;margin-left:-3.5px;border-radius:3.5px;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,0) 28%, rgba(0,0,0,0) 72%, rgba(0,0,0,.6)),
+    linear-gradient(90deg, #4c545e, #eef1f5 38%, #a7b0bb 62%, #3f464f);
+  box-shadow:1px 1px 2px rgba(0,0,0,.55);
 }
-.rolo-ring.l{left:30%;margin-left:-7.5px;}
-.rolo-ring.r{left:70%;margin-left:-7.5px;}
+.rolo-ring.l{left:30%;}
+.rolo-ring.r{left:70%;}
 .rolo-tabs{position:absolute;top:0;bottom:0;left:100%;display:flex;flex-direction:column;justify-content:space-evenly;padding:4px 0;}
 .rolo-tab{
   width:28px;height:22px;margin-left:-1px;border:1px solid var(--line);border-left:none;
@@ -173,9 +190,9 @@ section.process{padding-block:10px 18px;}
 .rolo-tab.active{background:var(--accent);border-color:var(--accent);color:#231405;transform:translateX(5px);}
 .flowhint{font-size:13px;color:var(--line);margin:10px 0 0;}
 @media (max-width:680px){
-  .rolo{height:172px;}
-  .rolo-title{font-size:21px;}
-  .rolo-blurb{font-size:14.5px;}
+  .rolo-sheet{--m:14px;padding:12px 14px 12px calc(var(--m) + 10px);}
+  .rolo-title{font-size:18px;}
+  .rolo-blurb{font-size:14px;line-height:1.45;}
   .rolostage{padding-right:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
@@ -337,7 +354,7 @@ footer{
 }
 </style>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Permanent+Marker&display=swap"> <!-- taste-skill-ignore: mono here loads only the schematic diagram's annotation face; Permanent Marker is the chalk-on-blueprint workflow card title -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Courier+Prime:wght@700&display=swap"> <!-- taste-skill-ignore: mono here loads only the schematic diagram's annotation face; Courier Prime is the typed label on the workflow index cards -->
 
 <canvas id="emberLayer"></canvas>
 <canvas id="sparkLayer"></canvas>
@@ -372,15 +389,15 @@ footer{
     <div class="workflowcard">
       <div class="rolostage">
         <div class="rolo" id="rolo" tabindex="0" role="group" aria-label="AI workflow step">
-          <div class="rolo-card rolo-sheet top" id="roloTop"><div class="rolo-title"></div></div>
-          <div class="rolo-card rolo-sheet bottom" id="roloBot"><div class="rolo-blurb"></div></div>
+          <div class="rolo-card rolo-sheet hole-bot top" id="roloTop"><div class="rolo-title"></div></div>
+          <div class="rolo-card rolo-sheet hole-top bottom" id="roloBot"><div class="rolo-blurb"></div></div>
           <div class="rolo-flap down" id="roloFlapDown" aria-hidden="true">
-            <div class="rolo-face rolo-sheet front"><div class="rolo-blurb"></div></div>
-            <div class="rolo-face rolo-sheet back"><div class="rolo-title"></div></div>
+            <div class="rolo-face rolo-sheet hole-top front"><div class="rolo-blurb"></div></div>
+            <div class="rolo-face rolo-sheet hole-bot back"><div class="rolo-title"></div></div>
           </div>
           <div class="rolo-flap up" id="roloFlapUp" aria-hidden="true">
-            <div class="rolo-face rolo-sheet front"><div class="rolo-title"></div></div>
-            <div class="rolo-face rolo-sheet back"><div class="rolo-blurb"></div></div>
+            <div class="rolo-face rolo-sheet hole-bot front"><div class="rolo-title"></div></div>
+            <div class="rolo-face rolo-sheet hole-top back"><div class="rolo-blurb"></div></div>
           </div>
           <div class="rolo-fold" aria-hidden="true">
             <span class="rolo-fold-shade"></span>
@@ -648,6 +665,31 @@ footer{
 
   topText.textContent = steps[0].t;
   botText.textContent = steps[0].d;
+
+  /* both halves must be the same height (the flap mirrors exactly from one
+     slot into the other), so size them to fit the longest blurb or title at
+     the card's real width -- otherwise narrow phones crush the text */
+  function sizeRolo(){
+    var probe = botCard.cloneNode(true);
+    probe.removeAttribute("id");
+    probe.style.cssText = "visibility:hidden;height:auto;top:0;bottom:auto;";
+    var text = probe.querySelector(".rolo-blurb");
+    rolo.appendChild(probe);
+    var tallest = 0;
+    steps.forEach(function(s){ text.textContent = s.d; tallest = Math.max(tallest, probe.offsetHeight); });
+    text.className = "rolo-title";
+    steps.forEach(function(s){ text.textContent = s.t; tallest = Math.max(tallest, probe.offsetHeight); });
+    rolo.removeChild(probe);
+    rolo.style.setProperty("--rolo-h", (Math.max(64, tallest) * 2 + 6) + "px");
+  }
+  sizeRolo();
+  var sizeQueued = false;
+  window.addEventListener("resize", function(){
+    if(sizeQueued) return;
+    sizeQueued = true;
+    requestAnimationFrame(function(){ sizeQueued = false; sizeRolo(); });
+  });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(sizeRolo);
 
   function wrap(i){ return ((i % N) + N) % N; }
   function faceText(flap, side){ return flap.querySelector(".rolo-face." + side + " > div"); }

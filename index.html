@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mark Elwood &middot; AI Systems Portfolio</title>
-<meta name="description" content="Certified TIG welder directing production software through Claude. A sample of systems running daily in production.">
+<meta name="description" content="Former aerospace welder taking systems from vision to production with AI: an automated futures trading system, a self-running storefront, 3D CAD and more.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mark Elwood">
 <meta property="og:title" content="Mark Elwood &middot; AI Systems Portfolio">
-<meta property="og:description" content="Certified TIG welder directing production software through Claude. A sample of systems running daily in production.">
+<meta property="og:description" content="Former aerospace welder taking systems from vision to production with AI: an automated futures trading system, a self-running storefront, 3D CAD and more.">
 <meta property="og:url" content="https://markelwo159-byte.github.io/ai-portfolio/">
 <meta property="og:image" content="https://markelwo159-byte.github.io/ai-portfolio/og-card.jpg">
 <meta property="og:image:width" content="1200">
@@ -502,7 +502,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       <span class="weldline">Eight years of blueprints.</span>
       <span class="weldline">Now directing the ones that <span class="weldwrap"><span class="accent">run themselves.</span><span class="torch"></span></span></span>
     </h1>
-    <p class="sub"><span class="who">Mark Elwood</span>Certified TIG welder, now directing AI systems across production codebases and generative pipelines: software and CAD built through Claude Code, imagery generated through Gemini. The systems below are a sample, all running daily in production.</p>
+    <p class="sub"><span class="who">Mark Elwood</span>Formerly a certified aerospace TIG welder, now taking systems from vision to finished product with AI: software and CAD directed through Claude Code, imagery through Gemini, every result inspected before it ships. The work below ranges from a storefront that runs itself daily to an automated futures trading system with live execution.</p>
     <div class="chips">
       <span class="chip"><b>San Jose, CA</b></span>
       <span class="chip">AWS D17.1, Aerospace Certified</span>
@@ -516,7 +516,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
     <div class="workflowcard wf">
       <div class="wf-side">
         <p class="wf-lede">Judgment at the start and at the finish. Generation in the middle.</p>
-        <p class="wf-body">Every system on this page was built through the same six-stage sequence. The model handles generation, quickly and at volume. The stages around it decide what gets built, and what is allowed to ship.</p>
+        <p class="wf-body">Every system on this page, from the storefront's daily catalog sync to the futures trading engine, was built through the same six-stage sequence. The model handles generation, quickly and at volume. The stages around it decide what gets built, and what is allowed to ship.</p>
         <p class="wf-body">Scope and direction come first, so the model works against a written specification, edge cases included, rather than an open-ended prompt. Review and stress testing follow: every line is read, and the system is driven through the failure modes it will meet in production. Only what passes verification on real devices is deployed, and it runs under monitoring, so any failure surfaces the moment it happens.</p>
         <p class="flowhint" id="flowHint">Auto-advancing. Swipe up or down, click a step, or a tab, to jump around.</p>
       </div>
@@ -660,6 +660,12 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       tools:"Python, directed by Claude · FTP · Shopify Admin API",
       replaced:"Manual price and stock verification across the full catalog, repeated daily, with no reliable way to catch a missed update before a customer did.",
       flow:[["Supplier","FTP feed"],["Diff + reprice","directed by Claude"],["Shopify","live same day"]] },
+    { key:"research", title:"Trading System", tagline:"Automated futures trading: research, execution and risk, end to end",
+      problem:"Most retail trading systems are fitted to past data and fail live: their backtests see information they would not have had in the moment, ignore execution costs, and are judged on profit instead of risk.",
+      build:"An automated trading system for Nasdaq-100 and S&P 500 futures, built end to end through Claude. A research pipeline runs over five years of market data down to the second: a vectorized backtester screens ideas in minutes, and an event-driven engine replays every fill second by second with no look-ahead. Entries, exits, stop placement, position sizing and execution were each researched as separate problems across thousands of logged experiments, then run live through a broker API under automated monitoring.",
+      tools:"Python, directed by Claude · vectorized and event-driven backtesting · live broker execution API · dedicated compute machine",
+      replaced:"Informal, hand-run backtests with no check on look-ahead bias, execution cost, or whether a result was statistically real.",
+      flow:[["Market data","5 years"],["Research","directed by Claude"],["Live trading","broker API"]] },
     { key:"tryon", title:"Virtual Try On", tagline:"Live face tracking, turned into a real time earring preview",
       problem:"No reliable way for a customer to judge the actual size or fit of a piece of jewelry before purchase.",
       build:"Face landmark detection runs entirely client side; no image is ever uploaded. The iris, a near constant 11.7mm across adults, serves as the scale reference for sizing the earring against the face. Verified accurate to roughly a 45 degree head turn, the working range for a phone held at arm's length.",
@@ -695,16 +701,43 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       build:"Automated Google title tags and meta descriptions across the entire catalog, with structured data published on every product page. The resulting feed passed Google Merchant Center review, with 84,400 products approved.",
       tools:"Python, directed by Claude · structured data · Meta Ads",
       replaced:"Hand written metadata per product, and ad creative that went live without ever being tested.",
-      flow:[["Full catalog","every product"],["Titles + schema","directed by Claude"],["Indexed","Merchant approved"]] },
-    { key:"research", title:"Market Research", tagline:"Backtesting, held to an honest standard",
-      problem:"Informal backtests routinely introduce look ahead bias: the model sees data it would not actually have had at that point in time.",
-      build:"A systematic research pipeline with a defined statistical validation method, audited for look ahead bias, then proven against a live tested execution engine rather than a backtest alone.",
-      tools:"Python, directed by Claude · statistical validation",
-      replaced:"Informal, hand run analysis with no independent check on whether the result was statistically real.",
-      flow:[["Market history","price data"],["Backtest + validate","directed by Claude"],["Live tested","execution engine"]] }
+      flow:[["Full catalog","every product"],["Titles + schema","directed by Claude"],["Indexed","Merchant approved"]] }
   ];
 
   var details = {
+ "research": {
+  "steps": [
+   [
+    "Data",
+    "Five years of futures data down to the second, verified for session times, contract rolls and gaps before any test runs."
+   ],
+   [
+    "Hypothesis",
+    "Each idea is written as a testable rule and checked against a durable log of every prior experiment, so nothing is re-tested by accident or cherry-picked."
+   ],
+   [
+    "Screen",
+    "A vectorized backtester sweeps each idea across years of data in minutes, on both markets at once."
+   ],
+   [
+    "Replay",
+    "Survivors move to an event-driven engine that replays the market second by second; every fill uses only data that existed at that moment."
+   ],
+   [
+    "Exits and execution",
+    "Exits, stop placement, trailing logic and position sizing are researched as their own problems, with slippage and commissions measured from real fills and order book data."
+   ],
+   [
+    "Validate",
+    "A result must hold out of sample, on both markets, against a matched control, and is ranked by drawdown before profit: the limit a funded trading account actually enforces."
+   ],
+   [
+    "Live",
+    "What survives runs live through a broker API with bracket orders, restart-safe state and automated monitoring, and live fills are reconciled against the simulation."
+   ]
+  ],
+  "eng": "Python, directed by Claude: vectorized and event-driven backtesting, live broker integration, a dedicated compute machine running experiments in parallel, and a log of every experiment ever run."
+ },
  "catalog": {
   "steps": [
    [
@@ -875,31 +908,6 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
    ]
   ],
   "eng": "Python, Shopify metafields, Google Merchant Center and Meta Ads, directed by Claude."
- },
- "research": {
-  "steps": [
-   [
-    "Data",
-    "Multi year historical market data is collected and verified, including session times and contract rolls."
-   ],
-   [
-    "Hypothesis",
-    "Each idea is written down as a testable rule before any test runs, and checked against a log of every prior experiment."
-   ],
-   [
-    "Backtest",
-    "Tests run under a strict no look ahead rule: the simulation only ever sees data that existed at that moment."
-   ],
-   [
-    "Validate",
-    "A result must hold out of sample, on two separate markets, against a matched control, with drawdown weighed ahead of profit."
-   ],
-   [
-    "Live test",
-    "What survives runs on a live execution engine, and its fills are compared against the simulation's."
-   ]
-  ],
-  "eng": "Python, directed by Claude: vectorized backtests, an event driven execution engine, a dedicated compute machine, and a durable log of every experiment."
  }
 };
   var wfxOpen = false;

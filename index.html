@@ -1,0 +1,863 @@
+<title>Weld &amp; Ship</title>
+<style>
+/* layout: short hero, one compact rotating "how I build" card (no stacked
+   blocks), then an app style stage (tabs + animated schematic) as the
+   centerpiece sized to need less scroll, then field evidence and contact.
+   single theme on purpose: a blueprint is always a dark ground drawing. */
+:root{
+  --bg:#0b1930;
+  --bg2:#0e2140;
+  --panel:#11284a;
+  --panel-2:#16305a;
+  --line:#2f4d78;
+  --line-soft:#1c3156;
+  --ink:#eef4fb;
+  --muted:#8fa7c7;
+  --accent:#ff8a3d;
+  --good:#5fd4c4;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:
+    repeating-linear-gradient(0deg, rgba(143,167,199,0.07) 0 1px, transparent 1px 26px), /* taste-skill-ignore: blueprint grid rule line, repeats, does not fade */
+    repeating-linear-gradient(90deg, rgba(143,167,199,0.07) 0 1px, transparent 1px 26px), /* taste-skill-ignore: blueprint grid rule line, repeats, does not fade */
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif;
+  padding-inline:16px;
+  position:relative;
+}
+a{color:var(--good);}
+.wrap{max-width:1100px;margin:0 auto;}
+#sparkLayer{position:fixed;inset:0;pointer-events:none;z-index:50;}
+#emberLayer{position:fixed;inset:0;pointer-events:none;z-index:-1;}
+
+header.top{
+  position:sticky;top:env(safe-area-inset-top,0px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding-block:12px;margin-inline:-16px;padding-inline:16px;
+  background:#081222;backdrop-filter:blur(6px);
+  z-index:5;
+}
+header.top .mark{font-weight:600;letter-spacing:.04em;font-size:14px;}
+header.top nav{display:flex;gap:16px;font-size:13px;color:var(--muted);}
+header.top nav a{color:var(--muted);text-decoration:none;}
+header.top nav a:hover,header.top nav a:focus-visible{color:var(--ink);}
+
+/* ---------- compact hero ---------- */
+.hero{padding-block:16px 10px;}
+h1.headline{
+  font-size:clamp(24px,4.4vw,42px);line-height:1.04;margin:0 0 8px;
+  font-weight:800;text-wrap:balance;font-family:"Big Shoulders Display","Arial Narrow",sans-serif;
+  position:relative;
+}
+h1.headline .weldline{display:block;}
+h1.headline .accent{color:var(--accent);position:relative;display:inline-block;}
+h1.headline.weld-ready .accent{animation:reveal 1.1s cubic-bezier(.2,.7,.2,1) both;animation-delay:.2s;}
+.torch{
+  position:absolute;top:2px;bottom:2px;width:18px;left:-18px;border-radius:50%;
+  background:#fff6e8;filter:blur(9px);opacity:0;pointer-events:none;
+}
+.torch.go{animation:torchmove 1.1s cubic-bezier(.2,.7,.2,1) both;animation-delay:.2s;}
+@keyframes reveal{from{clip-path:inset(0 100% 0 0);}to{clip-path:inset(0 0% 0 0);}}
+@keyframes torchmove{
+  0%{left:-18px;opacity:0;}
+  6%{opacity:1;}
+  92%{opacity:1;}
+  100%{left:100%;opacity:0;}
+}
+@media (prefers-reduced-motion:reduce){
+  h1.headline.weld-ready .accent{animation:none;}
+  .torch.go{animation:none;display:none;}
+}
+.sub{max-width:62ch;font-size:16px;line-height:1.5;color:var(--muted);margin:0 0 14px;}
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{background:var(--panel-2);padding:5px 11px;font-size:13px;border-radius:999px;color:var(--muted);white-space:nowrap;}
+.chip b{color:var(--ink);font-weight:500;}
+
+h2{
+  font-family:"Big Shoulders Display",sans-serif;font-weight:700;
+  font-size:clamp(19px,2.8vw,24px);letter-spacing:.01em;margin:0 0 4px;
+}
+.section-sub{color:var(--muted);font-size:15px;margin:0 0 12px;max-width:60ch;}
+
+/* ---------- AI workflow: one consolidated card, six clickable segments.
+   click any one to stop the cycle and read it on your own time. ---------- */
+section.process{padding-block:10px 18px;}
+.workflowcard{background:var(--panel);border-radius:14px;padding:16px 16px 14px;}
+.flowsteps{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin-bottom:10px;}
+.fbox{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  padding:10px 13px;border:1px solid transparent;background:transparent;border-radius:9px;
+  min-width:88px;font-family:inherit;color:inherit;text-align:left;cursor:pointer;
+  transition:background .5s ease, border-color .5s ease, box-shadow .5s ease, transform .3s ease;
+}
+.fbox:hover,.fbox:focus-visible{background:var(--panel-2);outline:none;}
+.ftitle{font-size:14.5px;font-family:"Big Shoulders Display",sans-serif;font-weight:600;white-space:nowrap;transition:color .5s ease;}
+.farrow{color:var(--line);font-size:15px;flex:0 0 auto;padding:0 1px;}
+.fbox.live{border-color:var(--accent);background:var(--panel-2);transform:translateY(-2px);}
+.fbox.live .ftitle{color:var(--ink);}
+.flowdesc{color:var(--muted);font-size:15px;line-height:1.55;min-height:1.6em;transition:opacity .3s ease;margin-top:4px;}
+.flowhint{font-size:13px;color:var(--line);margin:8px 0 0;}
+@media (max-width:680px){
+  .flowsteps{flex-direction:column;align-items:stretch;gap:2px;}
+  .farrow{align-self:center;transform:rotate(90deg);font-size:13px;padding:1px 0;}
+  .fbox{flex-direction:row;align-items:center;gap:12px;min-width:0;padding:12px 14px;}
+  .ftitle{font-size:16px;}
+  .flowdesc{font-size:14.5px;}
+}
+@media (prefers-reduced-motion:reduce){.fbox{transition:none;}}
+
+/* ---------- watch it work: a tiny storyboard, not a diagram ---------- */
+section.demo{padding-block:4px 22px;}
+.demopanel{background:var(--panel);border-radius:14px;overflow:hidden;}
+
+.scene{position:relative;height:244px;padding:18px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.sc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;}
+.sc.show{opacity:1;pointer-events:auto;}
+
+.sc-file{flex-direction:column;gap:10px;}
+.fileicon{width:56px;height:66px;transition:transform .15s ease;filter:drop-shadow(0 4px 10px rgba(0,0,0,.45));} /* taste-skill-ignore: paper lifting off a dark ground, a photographic lift not a UI card shadow */
+.fileicon .body{fill:#ffffff;stroke:#c3cad4;}
+.fileicon .fold{fill:#e3e7ec;stroke:#c3cad4;}
+.fileicon .line{stroke:#9aa5b1;}
+.fileicon.pressed{transform:scale(.88);}
+.filename{font-size:13px;color:var(--muted);}
+.cursor{position:absolute;width:20px;height:20px;left:78%;top:74%;
+  transition:left .85s cubic-bezier(.3,.7,.3,1), top .85s cubic-bezier(.3,.7,.3,1);}
+.cursor path{fill:#fff;stroke:#000;stroke-width:1.1;}
+.clickring{position:absolute;left:50%;top:44%;width:14px;height:14px;margin:-7px 0 0 -7px;
+  border:2px solid var(--accent);border-radius:50%;opacity:0;}
+.clickring.ping{animation:ping .5s ease-out;}
+@keyframes ping{from{opacity:.9;transform:scale(.4);}to{opacity:0;transform:scale(2.3);}}
+
+.sc-sheet{flex-direction:column;align-items:stretch;width:100%;
+  transform:scale(.55);transition:opacity .3s ease, transform .4s cubic-bezier(.3,1.4,.4,1);}
+.sc-sheet.show{transform:scale(1);}
+.winbar{display:flex;gap:5px;margin-bottom:9px;}
+.wbdot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;position:static;}
+.wbdot.r{background:#ff6b6b;} .wbdot.y{background:#ffd166;} .wbdot.g{background:var(--good);}
+.rows{display:flex;flex-direction:column;gap:4px;width:100%;
+  transition:transform .5s cubic-bezier(.4,0,.2,1), opacity .5s ease;}
+.rows.exit{transform:translateX(-130%);opacity:0;}
+.rowbar{
+  height:18px;border-radius:6px;background:var(--panel-2);
+  position:relative;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;
+  transition:background .3s ease, box-shadow .3s ease;
+}
+.rowbar.scan{background:rgba(95,212,196,.3);}
+.rowval{font-size:13px;color:var(--good);font-weight:600;font-variant-numeric:tabular-nums;
+  opacity:0;transform:translateX(6px);transition:opacity .3s ease, transform .3s ease;white-space:nowrap;}
+.rowbar.revealed .rowval{opacity:1;transform:translateX(0);}
+
+.sc-product{flex-direction:column;gap:12px;align-items:center;}
+.ringphoto{width:152px;height:auto;display:block;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5));} /* taste-skill-ignore: real product photograph, a photographic lift not a UI card shadow */
+.stats{display:flex;gap:24px;}
+.stat{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.stat-label{font-size:13px;color:var(--muted);}
+.wheel{height:1.5em;width:70px;overflow:hidden;position:relative;border-radius:6px;background:var(--panel-2);}
+.wheelTrack{display:flex;flex-direction:column;align-items:center;transition:transform 1.1s cubic-bezier(.2,.85,.25,1);}
+.wheelTrack div{height:1.5em;line-height:1.5em;font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:var(--ink);}
+
+.dbanner{padding:10px 16px;font-size:14px;color:var(--muted);text-align:center;
+  background:var(--panel-2);min-height:1.6em;transition:color .3s ease;}
+.dbanner.ok{color:var(--good);}
+
+/* ---------- the stage: tabs + animated schematic ---------- */
+section.stage{padding-block:4px 20px;}
+.stagebox{
+  display:grid;grid-template-columns:220px 1fr;gap:1px;
+  background:var(--line);
+  border-radius:14px;overflow:hidden;
+}
+@media (max-width:760px){.stagebox{grid-template-columns:1fr;}}
+
+.tabs{background:var(--line-soft);display:flex;flex-direction:column;gap:1px;}
+.tab{
+  display:flex;align-items:center;gap:10px;text-align:left;
+  border:none;background:var(--panel);color:var(--ink);padding:12px 14px;
+  cursor:pointer;font-family:inherit;
+  position:relative;min-width:0;
+}
+.tab .ic{flex:0 0 auto;width:19px;height:19px;color:var(--muted);transition:color .2s;}
+.tab .tt{min-width:0;}
+.tab .tt b{display:block;font-size:13.5px;font-family:"Big Shoulders Display",sans-serif;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tab .tt span{display:block;font-size:13px;color:var(--muted);}
+.tab:hover .ic,.tab:focus-visible .ic{color:var(--accent);}
+.tab[aria-selected="true"]{background:var(--panel-2);}
+.tab[aria-selected="true"]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);}
+.tab[aria-selected="true"] .ic{color:var(--accent);}
+.tab{opacity:0;transform:translateY(10px);}
+.tab.reveal{animation:tabin .5s ease both;}
+@keyframes tabin{to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){
+  .tab{opacity:1;transform:none;}
+  .tab.reveal{animation:none;}
+}
+
+@media (max-width:760px){
+  .tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;}
+  .tab{padding:11px 12px;}
+  .tab .tt span{display:none;}
+  .tab .tt b{white-space:normal;}
+}
+
+.stagepanel{background:var(--panel);padding:18px;min-width:0;}
+.stagepanel h3{margin:0 0 2px;font-size:22px;font-family:"Big Shoulders Display",sans-serif;}
+.stagepanel .tagline{color:var(--accent);font-size:15px;margin:0 0 14px;}
+
+.flowwrap{width:100%;}
+.showcase{position:relative;height:300px;background:var(--bg2);border-radius:10px;overflow:hidden;}
+.showcase img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.1s ease;}
+.showcase img.on{opacity:1;}
+@media (max-width:640px){.showcase{height:260px;}}
+@media (prefers-reduced-motion:reduce){.showcase img{transition:none;}}
+.flow{display:block;width:100%;height:auto;max-width:540px;}
+/* taste-skill-ignore: this is a drawn schematic diagram, the monospace reads as the
+   diagram's own annotation face, the same way a blueprint's callouts are hand lettered */
+.flow text{font-family:"IBM Plex Mono",monospace;fill:var(--ink);} /* taste-skill-ignore: drawn schematic diagram, mono is its annotation face, not a UI label */
+.flow .lbl{font-size:16px;font-weight:600;fill:var(--muted);}
+.flow .box{fill:var(--panel-2);stroke:var(--line);opacity:0;transform:scale(.92);transform-origin:center;
+  transition:opacity .35s ease, transform .35s ease;rx:6;}
+.flow .box.proc{stroke:var(--accent);}
+.flow .box.on{opacity:1;transform:scale(1);animation:ignite .6s ease-out;}
+.flow .arrow{stroke:var(--accent);stroke-width:2;fill:none;}
+.flow .arrow.spark{animation:dash 1.6s linear infinite;stroke-dasharray:4 4;}
+@keyframes dash{to{stroke-dashoffset:-16;}}
+/* taste-skill-ignore: a one time entrance flash on arrival, zero at both ends, not a resting shadow */
+@keyframes ignite{
+  0%{filter:drop-shadow(0 0 0 rgba(255,138,61,0));} /* taste-skill-ignore */
+  35%{filter:drop-shadow(0 0 10px var(--accent));} /* taste-skill-ignore */
+  100%{filter:drop-shadow(0 0 0 rgba(255,138,61,0));} /* taste-skill-ignore */
+}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px;}
+@media (max-width:640px){.row{grid-template-columns:1fr;}}
+dl{margin:0;}
+dt{font-size:14px;font-weight:600;color:var(--muted);margin-top:12px;}
+dt:first-child{margin-top:0;}
+dd{margin:4px 0 0;line-height:1.55;font-size:16px;}
+.tools{color:var(--good);font-size:15px;}
+
+.fade-enter{animation:fadein .35s ease both;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@media (prefers-reduced-motion:reduce){
+  .fade-enter{animation:none;}
+  .flow .box{transition:none;opacity:1;transform:none;}
+  .flow .arrow.spark{animation:none;}
+}
+
+/* ---------- field evidence: a composed list, not a row of matching cards ---------- */
+section.field{padding-block:14px 6px;}
+.evidence{display:flex;flex-direction:column;gap:26px;}
+.ev-item{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;}
+.ev-item h3{margin:0;font-size:22px;font-family:"Big Shoulders Display",sans-serif;flex:0 0 auto;}
+.ev-item a.go{font-size:14px;font-weight:600;color:var(--good);text-decoration:none;white-space:nowrap;}
+.ev-item a.go:hover,.ev-item a.go:focus-visible{text-decoration:underline;}
+.ev-item p{margin:2px 0 0;color:var(--muted);font-size:15px;line-height:1.5;max-width:62ch;width:100%;}
+
+footer{
+  background:var(--panel);border-radius:14px;padding:20px 22px;margin-top:22px;
+  display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;align-items:baseline;
+  color:var(--muted);font-size:14px;
+}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"> <!-- taste-skill-ignore: mono here loads only the schematic diagram's annotation face -->
+
+<canvas id="emberLayer"></canvas>
+<canvas id="sparkLayer"></canvas>
+
+<header class="top">
+  <span class="mark">Mark Elwood</span>
+  <nav>
+    <a href="#stage">Systems</a>
+    <a href="#field">Field evidence</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <h1 class="headline" id="headline">
+      <span class="weldline">Eight years reading blueprints.</span>
+      <span class="weldline">Now I direct the ones that <span class="accent">run themselves.<span class="torch"></span></span></span>
+    </h1>
+    <p class="sub">Mark Elwood. Certified TIG welder, now directing production software through Claude rather than writing it by hand. The eight systems below run daily in production.</p>
+    <div class="chips">
+      <span class="chip"><b>San Jose, CA</b></span>
+      <span class="chip">AWS D17.1, Aerospace Certified</span>
+      <span class="chip">Claude Code directed</span>
+      <span class="chip">1:1 scale, live production</span>
+    </div>
+  </section>
+
+  <section class="process">
+    <h2>AI Workflow</h2>
+    <div class="workflowcard">
+      <div class="flowsteps" id="flowsteps" role="tablist" aria-label="AI workflow steps"></div>
+      <p class="flowdesc" id="flowDesc"></p>
+      <p class="flowhint" id="flowHint">Auto-advancing. Click any step to stop and read it.</p>
+    </div>
+  </section>
+
+  <section class="stage" id="stage">
+    <h2>Eight systems I have shipped</h2>
+    <p class="section-sub">Select any system below to see how it works.</p>
+    <div class="stagebox">
+      <div class="tabs" role="tablist" aria-label="Systems shipped" id="tabs"></div>
+      <div class="stagepanel" id="panel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="demo" id="demo">
+    <h2>How it works</h2>
+    <p class="section-sub">The catalog sync, rendered simply.</p>
+    <div class="demopanel">
+      <div class="scene" id="scene">
+        <div class="sc sc-file" id="scFile">
+          <svg class="fileicon" id="fileIcon" viewBox="0 0 48 56">
+            <path class="body" d="M8 2h24l8 8v44H8z" stroke-width="2"/>
+            <path class="fold" d="M32 2l8 8h-8z" stroke-width="2" stroke-linejoin="round"/>
+            <g class="line" stroke-width="1.6">
+              <line x1="14" y1="24" x2="34" y2="24"/>
+              <line x1="14" y1="31" x2="34" y2="31"/>
+              <line x1="14" y1="38" x2="34" y2="38"/>
+              <line x1="14" y1="45" x2="34" y2="45"/>
+            </g>
+          </svg>
+          <div class="filename">Daily_Stock_Update</div>
+          <svg class="cursor" id="cursor" viewBox="0 0 24 24"><path d="M4 2l14 8-6 2 4 7-3 2-4-7-4 4z" stroke-width="1"/></svg>
+          <span class="clickring" id="clickring"></span>
+        </div>
+
+        <div class="sc sc-sheet" id="scSheet">
+          <div class="winbar"><span class="wbdot r"></span><span class="wbdot y"></span><span class="wbdot g"></span></div>
+          <div class="rows" id="artRows"></div>
+        </div>
+
+        <div class="sc sc-product" id="scProduct">
+          <img class="ringphoto" src="ring-cutout.png" alt="Point West Pavilion ring, background removed" width="520" height="443">
+          <div class="stats">
+            <div class="stat"><span class="stat-label">Quantity</span><div class="wheel"><div class="wheelTrack" id="qtyTrack"></div></div></div>
+            <div class="stat"><span class="stat-label">Price</span><div class="wheel"><div class="wheelTrack" id="priceTrack"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="dbanner" id="dBanner">Opening today's price list&hellip;</div>
+    </div>
+  </section>
+
+  <section class="field" id="field">
+    <h2>Field evidence</h2>
+    <p class="section-sub">Not mockups. Click a link below to see any of these at work.</p>
+    <div class="evidence">
+      <div class="ev-item">
+        <h3>Point West Pavilion</h3>
+        <a class="go" href="https://pointwestpv.com" target="_blank" rel="noopener">pointwestpv.com &#8594;</a>
+        <p>The live storefront itself. Every system described above runs here, in production, right now.</p>
+      </div>
+      <div class="ev-item">
+        <h3>Chevron Wedding Set</h3>
+        <a class="go" href="https://chevron-wedding-set.netlify.app" target="_blank" rel="noopener">chevron-wedding-set.netlify.app &#8594;</a>
+        <p>A live 3D viewer built for a custom order: a platinum chevron band engineered to nest exactly against a customer's marquise engagement ring.</p>
+      </div>
+      <div class="ev-item">
+        <h3>Yops Pendant</h3>
+        <a class="go" href="https://yops-pendant.netlify.app" target="_blank" rel="noopener">yops-pendant.netlify.app &#8594;</a>
+        <p>A live 3D viewer built for a custom order: a pendant directed through Claude from the first prompt through to the final model.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer id="contact">
+    <span>Mark Elwood, San Jose CA</span>
+    <span style="font-variant-numeric:tabular-nums">(408) 583-8657</span>
+    <span>Markelwo159@gmail.com</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var ICONS = {
+    catalog:'<path d="M3 7h18M3 12h18M3 17h12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
+    imaging:'<rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3 17l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    tryon:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>',
+    preview3d:'<path d="M12 2l9 5v10l-9 5-9-5V7l9-5z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M3 7l9 5 9-5M12 12v10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+    seo:'<circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M20 20l-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 12l2-3 2 2 3-4" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    research:'<path d="M4 19V10M11 19V5M18 19v-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 19h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+    social:'<path d="M3 11.5L21 4l-6.5 17-3-7.5-7.5-3z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M11.5 12.5L21 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>',
+    imagegen:'<rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="9" cy="9" r="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3 17l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 5l.7 1.4 1.4.7-1.4.7-.7 1.4-.7-1.4-1.4-.7 1.4-.7z" fill="currentColor"/>'
+  };
+
+  var systems = [
+    { key:"catalog", title:"Catalog Sync", tagline:"A daily supplier feed, reconciled into live pricing",
+      problem:"Thousands of SKUs change price or stock daily. Verification was manual, line by line against a spreadsheet, with no guarantee the storefront matched the supplier by the time a customer saw it.",
+      build:"A Python pipeline, directed through Claude, pulls the supplier's full feed over FTP each morning, diffs it against the previous day's snapshot, and pushes only the changed records: typically a few hundred updates out of tens of thousands of listings.",
+      tools:"Python, directed by Claude · FTP · Shopify Admin API",
+      replaced:"Manual price and stock verification across the full catalog, repeated daily, with no reliable way to catch a missed update before a customer did.",
+      flow:[["Supplier","FTP feed"],["Diff + reprice","directed by Claude"],["Shopify","live same day"]] },
+    { key:"tryon", title:"Virtual Try On", tagline:"Live face tracking, turned into a real time earring preview",
+      problem:"No reliable way for a customer to judge the actual size or fit of a piece of jewelry before purchase.",
+      build:"Face landmark detection runs entirely client side; no image is ever uploaded. The iris, a near constant 11.7mm across adults, serves as the scale reference for sizing the earring against the face. Verified accurate to roughly a 45 degree head turn, the working range for a phone held at arm's length.",
+      tools:"Google MediaPipe, directed by Claude · on device only, nothing sent to a server",
+      replaced:"No equivalent existed on the site. The alternative was guesswork, or a staff made mockup.",
+      flow:[["Camera","on device only"],["Face + iris scale","directed by Claude"],["Earring preview","on screen only"]] },
+    { key:"imagegen", title:"Image Generation", tagline:"A text prompt, engineered into usable marketing imagery",
+      problem:"Lifestyle and banner imagery for a catalog this size would otherwise require a photo shoot for every piece, never realistic here. An underspecified prompt produces generic, inconsistent output by default.",
+      build:"Composition, lighting, and material are specified to the level a photographer would brief a set: how the metal should catch light, how fabric falls, where the eye lands. Gemini generates against that specification; nothing is approved until it is checked against the real product and against the store's rule barring a repeated pose or setup.",
+      tools:"Gemini, directed by detailed prompt engineering · composition and lighting control · manual review",
+      replaced:"Either no lifestyle imagery at all, or a generic stock photo that reads as slightly off: the usual result when a model is prompted without a real specification.",
+      photos:["showcase-tennis.jpg","showcase-pendant.jpg","showcase-marquise.jpg","showcase-silk-cross.jpg","showcase-silk-ringbox.jpg","showcase-silk-band.jpg"] },
+    { key:"preview3d", title:"3D Preview", tagline:"A design prompt, turned into a model you can rotate",
+      problem:"Custom pieces were historically approved from a flat sketch or a verbal description alone, before any metal was committed to casting.",
+      build:"Claude generates and refines the CAD model from a design prompt. The model is then rebuilt with physically based shaders and a lightweight mesh, so a customer opens a link, rotates the piece from any angle, and requests changes before it goes to casting, removing the email cycle that previously stood between concept and approval.",
+      tools:"CAD, directed by Claude · three.js · lightweight STL",
+      replaced:"A flat sketch as the only reference available before a design went to metal.",
+      flow:[["Design prompt","plus reference"],["CAD + shaders","directed by Claude"],["3D link","sent to customer"]] },
+    { key:"imaging", title:"Image Pipeline", tagline:"A raw supplier photo, turned store ready automatically",
+      problem:"New product photography arrives by the thousand. Each image needs the same cleanup before it is publishable, at a volume no single editor can sustain.",
+      build:"An automated pipeline strips the background, recolors it to match the storefront palette, then resizes and centers every photo onto one consistent canvas: a photo shot in a supplier's warehouse is normalized to the site's visual standard.",
+      tools:"Python, directed by Claude · image processing",
+      replaced:"Editing every incoming photo by hand, one at a time, at a volume no single person could sustain.",
+      flow:[["Raw photo","from supplier"],["Clean + resize","directed by Claude"],["Store ready","image, same shape"]] },
+    { key:"social", title:"Social Automation", tagline:"A content calendar, built and scheduled on its own",
+      problem:"A real posting cadence across several platforms means writing captions, selecting images, and scheduling each post by hand, most days of the week: difficult to sustain manually at a consistent standard.",
+      build:"A Python pipeline, directed through Claude, drafts on brand captions, selects images, applies the store's monogram, and schedules the batch to Instagram and Facebook at once.",
+      tools:"Python, directed by Claude · Meta Graph API · scheduled posting",
+      replaced:"A person writing and scheduling every post by hand, platform by platform, with no consistent cadence week to week.",
+      flow:[["Content plan","topics + calendar"],["Draft + brand","directed by Claude"],["Scheduled","across platforms"]] },
+    { key:"seo", title:"SEO & Marketing", tagline:"Store wide search metadata, generated automatically",
+      problem:"Search metadata for a catalog this size cannot be authored by hand, item by item, and still stay current as price and stock shift underneath it.",
+      build:"Automated Google title tags and meta descriptions across the entire catalog, with structured data published on every product page. The resulting feed passed Google Merchant Center review, with 84,400 products approved.",
+      tools:"Python, directed by Claude · structured data · Meta Ads",
+      replaced:"Hand written metadata per product, and ad creative that went live without ever being tested.",
+      flow:[["Full catalog","every product"],["Titles + schema","directed by Claude"],["Indexed","Merchant approved"]] },
+    { key:"research", title:"Market Research", tagline:"Backtesting, held to an honest standard",
+      problem:"Informal backtests routinely introduce look ahead bias: the model sees data it would not actually have had at that point in time.",
+      build:"A systematic research pipeline with a defined statistical validation method, audited for look ahead bias, then proven against a live tested execution engine rather than a backtest alone.",
+      tools:"Python, directed by Claude · statistical validation",
+      replaced:"Informal, hand run analysis with no independent check on whether the result was statistically real.",
+      flow:[["Market history","price data"],["Backtest + validate","directed by Claude"],["Live tested","execution engine"]] }
+  ];
+
+  var tabs = document.getElementById("tabs");
+  var panel = document.getElementById("panel");
+
+  systems.forEach(function(s, i){
+    var btn = document.createElement("button");
+    btn.className = "tab";
+    btn.setAttribute("role","tab");
+    btn.setAttribute("aria-selected", i===0 ? "true":"false");
+    btn.setAttribute("data-key", s.key);
+    btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24">'+ICONS[s.key]+'</svg>' +
+      '<span class="tt"><b>'+s.title+'</b><span>'+s.tagline+'</span></span>';
+    btn.addEventListener("click", function(e){ select(s.key); burst(e.clientX, e.clientY); });
+    tabs.appendChild(btn);
+  });
+
+  function flowSvg(flow){
+    var boxW=190, boxH=72, gap=38, pad=10;
+    var w=boxW*3+gap*2+pad*2, h=boxH+pad*2;
+    var xs=[pad, pad+boxW+gap, pad+(boxW+gap)*2];
+    var p=['<svg class="flow" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Flow diagram" preserveAspectRatio="xMinYMid meet">'];
+    for(var i=0;i<3;i++){
+      var x=xs[i], cls = i===1 ? "box proc" : "box";
+      p.push('<rect class="'+cls+'" data-d="'+(i*120)+'" x="'+x+'" y="'+pad+'" width="'+boxW+'" height="'+boxH+'" rx="6"/>');
+      p.push('<text class="lbl" x="'+(x+boxW/2)+'" y="'+(pad+30)+'" text-anchor="middle">'+flow[i][0]+'</text>');
+      p.push('<text x="'+(x+boxW/2)+'" y="'+(pad+52)+'" text-anchor="middle" font-size="15">'+flow[i][1]+'</text>');
+      if(i<2){
+        var a1=x+boxW, a2=x+boxW+gap, y=pad+boxH/2;
+        p.push('<path class="arrow spark" d="M'+a1+' '+y+' L'+a2+' '+y+'"/>');
+        p.push('<path d="M'+(a2-7)+' '+(y-5)+' L'+a2+' '+y+' L'+(a2-7)+' '+(y+5)+'" fill="none" stroke="#ff8a3d" stroke-width="2"/>');
+      }
+    }
+    p.push('</svg>');
+    return p.join("");
+  }
+
+  var showcaseTimer = null;
+
+  function select(key){
+    var s = systems.filter(function(x){ return x.key===key; })[0];
+    if(!s) return;
+    Array.prototype.forEach.call(tabs.children, function(c){
+      c.setAttribute("aria-selected", c.getAttribute("data-key")===key ? "true":"false");
+    });
+    if(showcaseTimer){ clearInterval(showcaseTimer); showcaseTimer = null; }
+    panel.classList.remove("fade-enter");
+    var media = s.photos
+      ? '<div class="showcase" id="showcase">' + s.photos.map(function(src,i){
+          return '<img src="'+src+'" alt="Real marketing photo generated for Point West Pavilion" class="'+(i===0?'on':'')+'" loading="'+(i===0?'eager':'lazy')+'">';
+        }).join('') + '</div>'
+      : '<div class="flowwrap">'+flowSvg(s.flow)+'</div>';
+    panel.innerHTML =
+      '<h3>'+s.title+'</h3>' +
+      '<p class="tagline">'+s.tagline+'</p>' +
+      media +
+      '<div class="row">' +
+        '<dl><dt>Problem</dt><dd>'+s.problem+'</dd><dt>What it replaced</dt><dd>'+s.replaced+'</dd></dl>' +
+        '<dl><dt>How it is built</dt><dd>'+s.build+'</dd><dt>Tools</dt><dd class="tools">'+s.tools+'</dd></dl>' +
+      '</div>';
+    void panel.offsetWidth;
+    panel.classList.add("fade-enter");
+    if(s.photos){
+      var imgs = panel.querySelectorAll(".showcase img");
+      var idx = 0;
+      if(!reduced && imgs.length>1){
+        showcaseTimer = setInterval(function(){
+          imgs[idx].classList.remove("on");
+          idx = (idx+1) % imgs.length;
+          imgs[idx].classList.add("on");
+        }, 3200);
+      }
+    } else if(!reduced){
+      var boxes = panel.querySelectorAll(".flow .box");
+      boxes.forEach(function(b){
+        var d = parseInt(b.getAttribute("data-d"),10) || 0;
+        setTimeout(function(){ b.classList.add("on"); }, d);
+      });
+    } else {
+      panel.querySelectorAll(".flow .box").forEach(function(b){ b.classList.add("on"); });
+    }
+  }
+
+  /* AI workflow: six boxes, left to right, with arrows between them.
+     the orange highlight travels box to box; no separate moving dot. */
+  var steps = [
+    {t:"Scope",d:"Define exactly what the system must do, and just as precisely, what it must never do, before a single line gets built."},
+    {t:"Direct",d:"Specify the architecture and the edge cases in full, then let Claude build to that specification. I am directing the build, not typing it line by line."},
+    {t:"Review",d:"Read every line of what it actually produced. Trusting output without reading it is how defects reach production."},
+    {t:"Stress test",d:"Push it past the easy path on purpose, exercising empty states, malformed input, degraded connections, and outright failure modes."},
+    {t:"Verify",d:"Confirm the system actually works under real conditions: physical devices, both color themes, reduced motion settings, and a console with zero errors."},
+    {t:"Ship",d:"Deploy to run unattended in production, with monitoring in place to know the moment it fails."}
+  ];
+  var flowsteps = document.getElementById("flowsteps");
+  var flowDesc = document.getElementById("flowDesc");
+  var flowHint = document.getElementById("flowHint");
+  steps.forEach(function(s, i){
+    if(i>0){
+      var arrow = document.createElement("span");
+      arrow.className = "farrow";
+      arrow.textContent = "→";
+      arrow.setAttribute("aria-hidden","true");
+      flowsteps.appendChild(arrow);
+    }
+    var box = document.createElement("button");
+    box.type = "button";
+    box.className = "fbox";
+    box.id = "fbox"+i;
+    box.setAttribute("role","tab");
+    box.setAttribute("aria-selected", i===0 ? "true" : "false");
+    box.innerHTML = '<span class="ftitle">'+s.t+'</span>';
+    box.addEventListener("click", function(){ selectStep(i, true); });
+    flowsteps.appendChild(box);
+  });
+  var liveStep = 0;
+  var flowTimer = null;
+
+  function showStep(i, animate){
+    for(var k=0;k<steps.length;k++){
+      var b = document.getElementById("fbox"+k);
+      b.classList.toggle("live", k===i);
+      b.setAttribute("aria-selected", k===i ? "true" : "false");
+    }
+    if(animate && !reduced){
+      flowDesc.style.opacity = 0;
+      setTimeout(function(){
+        flowDesc.textContent = steps[i].d;
+        flowDesc.style.opacity = 1;
+      }, 150);
+    } else {
+      flowDesc.textContent = steps[i].d;
+      flowDesc.style.opacity = 1;
+    }
+  }
+
+  function selectStep(i, userClicked){
+    liveStep = i;
+    showStep(liveStep, !userClicked);
+    if(userClicked){
+      if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
+      flowHint.textContent = "Paused on this step. Click another to compare.";
+    }
+  }
+
+  function tickFlow(){
+    showStep(liveStep, true);
+    liveStep = (liveStep+1) % steps.length;
+  }
+  showStep(0, false);
+  if(!reduced){ flowTimer = setInterval(tickFlow, 5000); liveStep = 1; }
+  else { flowHint.textContent = "Click any step to read it."; }
+
+  /* click spark burst, ties the weld theme to the interaction itself */
+  var canvas = document.getElementById("sparkLayer");
+  var ctx = canvas.getContext && canvas.getContext("2d");
+  function sizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  sizeCanvas();
+  window.addEventListener("resize", sizeCanvas);
+
+  function burst(x,y){
+    if(reduced || !ctx) return;
+    var n = 14, parts = [];
+    for(var i=0;i<n;i++){
+      var ang = Math.random()*Math.PI*2, spd = 1.5+Math.random()*3.5;
+      parts.push({x:x,y:y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd - 1,life:1});
+    }
+    var start = null;
+    function frame(ts){
+      if(!start) start = ts;
+      var elapsed = ts - start;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      var alive = false;
+      parts.forEach(function(p){
+        if(p.life<=0) return;
+        p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.life -= 0.035;
+        if(p.life>0){
+          alive = true;
+          ctx.globalAlpha = Math.max(p.life,0);
+          ctx.fillStyle = p.life>0.5 ? "#fff3e6" : "#ff8a3d";
+          ctx.fillRect(p.x-1.5,p.y-1.5,3,3);
+        }
+      });
+      ctx.globalAlpha = 1;
+      if(alive && elapsed < 1200){ requestAnimationFrame(frame); }
+      else { ctx.clearRect(0,0,canvas.width,canvas.height); }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  select(systems[0].key);
+
+  /* watch it work: a tiny storyboard. a file opens, rows get checked and
+     each spits out a quantity and a price, the sheet slides away, and the
+     product page catches the new numbers on two spinning wheels. loops. */
+  var rowVals = [
+    {qty:14, price:420}, {qty:6, price:1240}, {qty:22, price:89}, {qty:3, price:1480},
+    {qty:9,  price:610}, {qty:17, price:265}, {qty:0, price:74}, {qty:11, price:299}
+  ];
+  var qtyOld=12, qtyNew=19, priceOld=420, priceNew=427;
+
+  var artRows = document.getElementById("artRows");
+  var dBanner = document.getElementById("dBanner");
+  var fileIcon = document.getElementById("fileIcon");
+  var cursor = document.getElementById("cursor");
+  var clickring = document.getElementById("clickring");
+  var qtyTrack = document.getElementById("qtyTrack");
+  var priceTrack = document.getElementById("priceTrack");
+
+  function showScene(id){
+    ["scFile","scSheet","scProduct"].forEach(function(s){
+      document.getElementById(s).classList.toggle("show", s===id);
+    });
+  }
+
+  function buildWheel(trackEl, from, to, money){
+    trackEl.innerHTML = "";
+    trackEl.style.transition = "none";
+    trackEl.style.transform = "translateY(0)";
+    for(var n=from; n<=to; n++){
+      var d = document.createElement("div");
+      d.textContent = money ? ("$"+n) : n;
+      trackEl.appendChild(d);
+    }
+    void trackEl.offsetWidth;
+    trackEl.style.transition = "";
+  }
+  function settleWheel(trackEl, instant){
+    var steps = trackEl.children.length;
+    var h = trackEl.children[0].getBoundingClientRect().height;
+    if(instant){ trackEl.style.transition = "none"; }
+    trackEl.style.transform = "translateY(-"+(h*(steps-1))+"px)";
+  }
+
+  function phase1(){
+    showScene("scFile");
+    dBanner.classList.remove("ok");
+    dBanner.textContent = "Opening today's price list…";
+    fileIcon.classList.remove("pressed");
+    clickring.classList.remove("ping");
+    cursor.style.transition = "none";
+    cursor.style.left = "108%"; cursor.style.top = "112%";
+    if(reduced){ return phase2(true); }
+    /* double rAF so the instant jump actually paints before the
+       transition is restored, or the browser animates the reset itself */
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        cursor.style.transition = "left .95s cubic-bezier(.22,.61,.36,1), top .95s cubic-bezier(.22,.61,.36,1)";
+        cursor.style.left = "50%"; cursor.style.top = "44%";
+      });
+    });
+    setTimeout(function(){
+      fileIcon.classList.add("pressed");
+      clickring.classList.add("ping");
+      var r = cursor.getBoundingClientRect();
+      burst(r.left+10, r.top+10);
+    }, 1150);
+    setTimeout(function(){ phase2(); }, 1500);
+  }
+
+  function phase2(skip){
+    showScene("scSheet");
+    dBanner.textContent = "Checking each item against today's prices…";
+    artRows.innerHTML = "";
+    artRows.classList.remove("exit");
+    rowVals.forEach(function(v,i){
+      var r = document.createElement("div");
+      r.className = "rowbar";
+      r.id = "bar"+i;
+      r.style.width = (52 + (i%4)*12) + "%";
+      r.innerHTML = '<span class="rowval">'+v.qty+' pcs · $'+v.price+'</span>';
+      artRows.appendChild(r);
+    });
+    if(skip){
+      rowVals.forEach(function(v,i){ document.getElementById("bar"+i).classList.add("revealed"); });
+      return phase4(true);
+    }
+    function scanRow(i){
+      if(i >= rowVals.length){
+        setTimeout(function(){
+          dBanner.textContent = "Found this morning's changes…";
+          artRows.classList.add("exit");
+          setTimeout(function(){ phase4(); }, 550);
+        }, 450);
+        return;
+      }
+      var bar = document.getElementById("bar"+i);
+      bar.classList.add("scan");
+      setTimeout(function(){
+        bar.classList.add("revealed");
+        setTimeout(function(){ scanRow(i+1); }, 170);
+      }, 300);
+    }
+    scanRow(0);
+  }
+
+  function phase4(skip){
+    showScene("scProduct");
+    buildWheel(qtyTrack, qtyOld, qtyNew, false);
+    buildWheel(priceTrack, priceOld, priceNew, true);
+    if(skip || reduced){
+      settleWheel(qtyTrack, true);
+      settleWheel(priceTrack, true);
+      dBanner.textContent = "Live on the site.";
+      dBanner.classList.add("ok");
+      return;
+    }
+    dBanner.textContent = "Updating the listing…";
+    setTimeout(function(){
+      settleWheel(qtyTrack, false);
+      settleWheel(priceTrack, false);
+    }, 300);
+    setTimeout(function(){
+      dBanner.textContent = "Live on the site.";
+      dBanner.classList.add("ok");
+    }, 1400);
+    setTimeout(phase1, 3200);
+  }
+
+  /* don't run the storyboard, or build its DOM, until the demo panel is
+     actually fully in view, so it never jostles layout while off screen */
+  var demoStarted = false;
+  function startDemo(){
+    if(demoStarted) return;
+    demoStarted = true;
+    phase1();
+  }
+  var demoEl = document.getElementById("demo");
+  if("IntersectionObserver" in window){
+    var demoIO = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting && en.intersectionRatio >= 0.95){
+          startDemo();
+          demoIO.disconnect();
+        }
+      });
+    }, {threshold: 0.95});
+    demoIO.observe(demoEl);
+  } else {
+    startDemo();
+  }
+
+  /* hero weld-in: only the orange accent word gets struck into view,
+     the rest of the headline is just there, already readable */
+  var headline = document.getElementById("headline");
+  requestAnimationFrame(function(){
+    headline.classList.add("weld-ready");
+    var accentEl = headline.querySelector(".accent");
+    accentEl.querySelector(".torch").classList.add("go");
+    if(!reduced){
+      setTimeout(function(){
+        var r = accentEl.getBoundingClientRect();
+        burst(r.left + 6, r.top + r.height/2);
+        burst(r.left + r.width*0.97, r.top + r.height/2);
+      }, 1100);
+    }
+  });
+
+  /* stage reveal: the tab list strikes in the first time it is actually seen */
+  var revealed = false;
+  if("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting && !revealed){
+          revealed = true;
+          Array.prototype.forEach.call(tabs.children, function(c,i){
+            setTimeout(function(){ c.classList.add("reveal"); }, i*70);
+          });
+          io.disconnect();
+        }
+      });
+    }, {threshold:.3});
+    io.observe(document.getElementById("stage"));
+  } else {
+    Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });
+  }
+
+  /* ambient embers drifting behind the whole page, a quiet constant instead of a static blueprint */
+  var eCanvas = document.getElementById("emberLayer");
+  var ectx = eCanvas.getContext && eCanvas.getContext("2d");
+  if(ectx && !reduced){
+    function sizeE(){ eCanvas.width = window.innerWidth; eCanvas.height = window.innerHeight; }
+    sizeE();
+    window.addEventListener("resize", sizeE);
+    var embers = [];
+    for(var e=0;e<38;e++){
+      embers.push({
+        x: Math.random()*eCanvas.width,
+        y: Math.random()*eCanvas.height,
+        r: 1 + Math.random()*2.2,
+        s: 0.18 + Math.random()*0.45,
+        drift: (Math.random()-0.5)*0.35,
+        a: 0.35 + Math.random()*0.45,
+        hot: Math.random() > 0.35
+      });
+    }
+    function emberFrame(){
+      ectx.clearRect(0,0,eCanvas.width,eCanvas.height);
+      embers.forEach(function(p){
+        p.y -= p.s; p.x += p.drift;
+        if(p.y < -5){ p.y = eCanvas.height + 5; p.x = Math.random()*eCanvas.width; }
+        ectx.globalAlpha = p.a;
+        ectx.shadowBlur = p.hot ? 6 : 0;
+        ectx.shadowColor = "#ff8a3d";
+        ectx.fillStyle = p.hot ? "#ffb066" : "#8fa7c7";
+        ectx.beginPath(); ectx.arc(p.x,p.y,p.r,0,Math.PI*2); ectx.fill();
+      });
+      ectx.globalAlpha = 1; ectx.shadowBlur = 0;
+      requestAnimationFrame(emberFrame);
+    }
+    requestAnimationFrame(emberFrame);
+  }
+})();
+</script>

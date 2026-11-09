@@ -636,9 +636,16 @@ footer{
   setTopContent(topFaces[1], 1); setBotContent(botFaces[1], 1);
 
   function render(extraDeg){
-    allFaces.forEach(function(f, i){
-      var deg = rotation + inherent[i % 2] + (extraDeg||0);
-      f.style.transform = "rotateX(" + deg + "deg)";
+    var e = extraDeg || 0;
+    // the top half and bottom half spin in OPPOSITE directions around the
+    // shared seam. spinning them the same way is geometrically identical to
+    // one rigid plane rotating about that line -- no crease ever shows.
+    // opposite signs make them visibly splay apart mid-flip, like a hinge.
+    topFaces.forEach(function(f, i){
+      f.style.transform = "rotateX(" + (rotation + e + inherent[i]) + "deg)";
+    });
+    botFaces.forEach(function(f, i){
+      f.style.transform = "rotateX(" + (-(rotation + e) + inherent[i]) + "deg)";
     });
   }
   render(0);

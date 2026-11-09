@@ -186,7 +186,8 @@ section.process{padding-block:10px 18px;}
 }
 .rolo-ring.l{left:30%;}
 .rolo-ring.r{left:70%;}
-.rolo-tabs{position:absolute;top:0;bottom:0;left:100%;display:flex;flex-direction:column;justify-content:space-evenly;padding:4px 0;}
+/* the tabs live inside the stage's reserved right strip, flush to the card */
+.rolo-tabs{position:absolute;top:0;bottom:0;right:0;width:34px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-evenly;padding:4px 0;}
 .rolo-tab{
   width:28px;height:22px;margin-left:-1px;border:1px solid var(--line);border-left:none;
   border-radius:0 7px 7px 0;background:var(--panel-2);color:var(--muted);
@@ -196,12 +197,28 @@ section.process{padding-block:10px 18px;}
 }
 .rolo-tab:hover{filter:brightness(1.25);}
 .rolo-tab.active{background:var(--accent);border-color:var(--accent);color:#231405;transform:translateX(5px);}
-.flowhint{font-size:13px;color:var(--line);margin:12px 0 0;text-align:center;}
+.flowhint{font-size:13px;color:var(--line);margin:12px 0 0;}
+/* desktop: context and a stage index on the left, the card on the right,
+   so the card sits in a composition instead of floating in empty panel */
+.wf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,520px);gap:44px;align-items:center;padding:26px 28px;}
+.wf-side{min-width:0;}
+.wf-lede{margin:0 0 12px;font-family:"Big Shoulders Display",sans-serif;font-weight:700;font-size:26px;line-height:1.1;color:var(--ink);max-width:30ch;}
+.wf-body{margin:0 0 10px;font-size:15px;line-height:1.6;color:var(--muted);max-width:52ch;}
+.wf .rolostage{max-width:none;margin:0;}
+@media (max-width:900px){
+  .wf{grid-template-columns:1fr;gap:12px;padding:16px;}
+  .wf-side{display:contents;}
+  .wf-lede{order:0;margin:0;font-size:22px;}
+  .wf-body{order:0;margin:0;font-size:14.5px;}
+  .wf .rolostage{order:1;width:100%;max-width:520px;margin:0 auto;}
+  .flowhint{order:2;margin:0;text-align:center;}
+}
 @media (max-width:680px){
   .rolo-sheet{--m:14px;padding:12px 14px 12px calc(var(--m) + 10px);}
   .rolo-title{font-size:18px;}
   .rolo-blurb{font-size:14px;}
   .rolostage{padding-right:30px;}
+  .rolo-tabs{width:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
 @media (prefers-reduced-motion:reduce){.rolo-flap{transition:none;}}
@@ -411,7 +428,13 @@ footer{
 
   <section class="process">
     <h2>AI Workflow</h2>
-    <div class="workflowcard">
+    <div class="workflowcard wf">
+      <div class="wf-side">
+        <p class="wf-lede">Judgment at the start and at the finish. Generation in the middle.</p>
+        <p class="wf-body">Every system on this page was built through the same six-stage sequence. The model handles generation, quickly and at volume. The stages around it decide what gets built, and what is allowed to ship.</p>
+        <p class="wf-body">Scope and direction come first, so the model works against a written specification, edge cases included, rather than an open-ended prompt. Review and stress testing follow: every line is read, and the system is driven through the failure modes it will meet in production. Only what passes verification on real devices is deployed, and it runs under monitoring, so any failure surfaces the moment it happens.</p>
+        <p class="flowhint" id="flowHint">Auto-advancing. Swipe up or down, click a step, or a tab, to jump around.</p>
+      </div>
       <div class="rolostage">
         <div class="rolo" id="rolo" tabindex="0" role="group" aria-label="AI workflow step">
           <div class="rolo-card rolo-sheet hole-bot top" id="roloTop"><div class="rolo-title"></div></div>
@@ -432,7 +455,6 @@ footer{
         </div>
         <div class="rolo-tabs" id="roloTabs" role="tablist" aria-label="Jump to a step"></div>
       </div>
-      <p class="flowhint" id="flowHint">Auto-advancing. Swipe up or down, click a step, or a tab, to jump around.</p>
     </div>
   </section>
 
@@ -706,7 +728,7 @@ footer{
     steps.forEach(function(s){ text.textContent = s.t; tallest = Math.max(tallest, probe.offsetHeight); });
     rolo.removeChild(probe);
     // never thinner than about 4.5:1 per half, however short the copy
-    var half = Math.max(64, Math.round(rolo.clientWidth * 0.22), tallest);
+    var half = Math.max(64, Math.round(rolo.clientWidth * (rolo.clientWidth > 400 ? 0.26 : 0.22)), tallest);
     rolo.style.setProperty("--rolo-h", (half * 2 + 6) + "px");
     alignRules();
   }
@@ -1141,25 +1163,44 @@ footer{
   // a reload otherwise drops you back mid-page with the list already on
   // screen, so it would fly in the moment the page opens
   if("scrollRestoration" in history) history.scrollRestoration = "manual";
+  /* fly the list in once you've scrolled it up past 55% of the screen.
+     two checks, because this page also runs inside the claude.ai viewer's
+     cross-origin frame, where browsers silently ignore an observer's
+     rootMargin: (1) this document's own scroll position against its own
+     viewport, measured directly, and (2) an observer confirming a real
+     slice of the list is on the actual screen, which still holds when the
+     frame is sized to the whole page and never scrolls itself. */
+  function revealTabs(){
+    revealed = true;
+    Array.prototype.forEach.call(tabs.children, function(c,i){
+      setTimeout(function(){ c.classList.add("reveal"); }, i*95);
+    });
+  }
   if("IntersectionObserver" in window){
-    var io = new IntersectionObserver(function(entries){
+    var onScreen = false, checkQueued = false, io;
+    var checkReveal = function(){
+      checkQueued = false;
+      if(revealed || !onScreen) return;
+      if(tabs.getBoundingClientRect().top > window.innerHeight * 0.55) return;
+      revealTabs();
+      io.disconnect();
+      window.removeEventListener("scroll", queueCheck);
+      window.removeEventListener("resize", queueCheck);
+    };
+    var queueCheck = function(){
+      if(checkQueued) return;
+      checkQueued = true;
+      requestAnimationFrame(checkReveal);
+    };
+    io = new IntersectionObserver(function(entries){
       entries.forEach(function(en){
-        // fire once the list's top has scrolled past 55% of the screen
-        // height (the rootMargin) AND a real slice of it is showing. the
-        // second check matters when this page runs inside a cross-origin
-        // frame (the claude.ai viewer): browsers ignore rootMargin there,
-        // so without it a single visible pixel would set it off.
-        var need = Math.min(80, en.boundingClientRect.height * 0.5);
-        if(en.isIntersecting && en.intersectionRect.height >= need && !revealed){
-          revealed = true;
-          Array.prototype.forEach.call(tabs.children, function(c,i){
-            setTimeout(function(){ c.classList.add("reveal"); }, i*95);
-          });
-          io.disconnect();
-        }
+        onScreen = en.isIntersecting && en.intersectionRect.height >= Math.min(80, en.boundingClientRect.height * 0.5);
       });
-    }, {threshold:[0,.05,.1,.15,.2,.25,.3,.4,.5,.6,.7,.8,.9,1], rootMargin:"0px 0px -45% 0px"});
+      queueCheck();
+    }, {threshold:[0,.05,.1,.15,.2,.25,.3,.4,.5,.6,.7,.8,.9,1]});
     io.observe(tabs);
+    window.addEventListener("scroll", queueCheck, {passive:true});
+    window.addEventListener("resize", queueCheck);
 
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });

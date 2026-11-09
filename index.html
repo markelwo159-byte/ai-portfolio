@@ -1145,8 +1145,10 @@ footer{
           io.disconnect();
         }
       });
-    }, {threshold:.25});
-    io.observe(tabs); // fire when the list itself is reached, not the whole stage
+    }, {threshold:0, rootMargin:"0px 0px -45% 0px"});
+    // fire once the top of the list has scrolled up past 55% of the screen
+    // height, so it lands as you scroll to it rather than on page load
+    io.observe(tabs);
 
   } else {
     Array.prototype.forEach.call(tabs.children, function(c){ c.classList.add("reveal"); });

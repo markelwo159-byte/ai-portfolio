@@ -97,42 +97,51 @@ h2{
 section.process{padding-block:10px 18px;}
 .workflowcard{background:var(--panel);border-radius:14px;padding:16px 16px 14px;}
 .rolostage{position:relative;display:flex;align-items:stretch;padding-right:34px;}
+/* a real rolodex, modeled physically: two cards resting flat (title above
+   the rings, blurb below), plus one double-sided flap. going forward, the
+   flap starts as the bottom card (old blurb on its front), swings toward
+   the viewer around the ring line, clears it, and lands face-down on the
+   top card -- its back side carries the new title, so it covers the old
+   one. one perspective, centered on the hinge, so the swing has real depth. */
 .rolo{
   position:relative;flex:1;height:148px;touch-action:none;cursor:grab;min-width:0;
   -webkit-user-select:none;user-select:none;
+  perspective:650px;perspective-origin:50% 50%;
 }
 .rolo:active{cursor:grabbing;}
 .rolo:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px;}
-/* two independent half-cards, each hinged at the seam (not at the card's
-   own center), so the top edge and bottom edge fold away from each other
-   around the rings, like a real card bending around them -- rather than
-   the whole rectangle tumbling as one rigid plane. each gets its OWN
-   perspective, so they read as two separate physical flaps (like a
-   flip-clock digit) instead of one shared, continuous surface. */
-.rolo-halfstage{position:absolute;left:0;right:0;height:calc(50% - 3px);perspective:380px;}
-.rolo-halfstage.top{top:0;}
-.rolo-halfstage.bottom{bottom:0;}
-.rolo-half{
-  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  border:1px solid var(--line);overflow:hidden;
+.rolo-card,.rolo-flap{position:absolute;left:0;right:0;height:calc(50% - 3px);}
+.rolo-card.top,.rolo-flap.up{top:0;}
+.rolo-card.bottom,.rolo-flap.down{bottom:0;}
+.rolo-sheet{
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;
   background:
     linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 35%, rgba(0,0,0,.2) 100%),
     repeating-linear-gradient(0deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
     repeating-linear-gradient(90deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
     var(--bg2);
   display:flex;align-items:center;justify-content:center;padding:8px 22px;
-  transition:transform .55s cubic-bezier(.45,0,.2,1);
 }
-.rolo-half.dragging{transition:none;}
-/* darkens as the face turns away from the viewer, mid-flip, then clears --
-   without this, a bare rotateX reads flat: perspective alone isn't enough
-   to sell a physical surface catching and losing the light as it turns. */
-.rolo-half::after{content:"";position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;}
-.rolo-half.flipping{z-index:4;}
-.rolo-half.flipping::after{animation:roloShade .55s cubic-bezier(.45,0,.2,1);}
-@keyframes roloShade{0%{opacity:0;}48%{opacity:.62;}52%{opacity:.62;}100%{opacity:0;}}
-.rolo-halfstage.top .rolo-half{border-radius:12px;transform-origin:center bottom;box-shadow:0 3px 7px rgba(0,0,0,.45);}
-.rolo-halfstage.bottom .rolo-half{border-radius:12px;transform-origin:center top;box-shadow:0 -3px 7px rgba(0,0,0,.45);}
+.rolo-card{z-index:1;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+/* shadow the swinging flap throws onto the card it is about to land on;
+   --cast is set every frame from the flap's measured angle */
+.rolo-card::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--cast,0);pointer-events:none;}
+/* the hinge sits on the ring line, 3px outside each flap's edge, so a 180
+   degree swing mirrors it exactly into the opposite slot */
+.rolo-flap{
+  z-index:3;visibility:hidden;transform-style:preserve-3d;
+  transition:transform .65s cubic-bezier(.45,.05,.3,1);
+}
+.rolo-flap.down{transform-origin:50% -3px;}
+.rolo-flap.up{transform-origin:50% calc(100% + 3px);}
+.rolo-flap.live{visibility:visible;}
+.rolo-flap.instant{transition:none;}
+.rolo-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.rolo-face.back{transform:rotateX(180deg);}
+/* each face darkens as it turns edge-on to the light and clears as it
+   settles (--shade, set every frame from the measured angle); without it
+   a bare rotateX reads as flat paper sliding */
+.rolo-face::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--shade,0);pointer-events:none;}
 .rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;text-align:center;}
 .rolo-blurb{color:var(--muted);font-size:15px;line-height:1.5;text-align:center;}
 /* the seam between the two card halves, and the two binder rings it hangs
@@ -168,7 +177,7 @@ section.process{padding-block:10px 18px;}
   .rolostage{padding-right:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
-@media (prefers-reduced-motion:reduce){.rolo-half{transition:none;}.rolo-half.flipping::after{animation:none;}}
+@media (prefers-reduced-motion:reduce){.rolo-flap{transition:none;}}
 
 /* ---------- watch it work: a tiny storyboard, not a diagram ---------- */
 section.demo{padding-block:4px 22px;}
@@ -361,13 +370,15 @@ footer{
     <div class="workflowcard">
       <div class="rolostage">
         <div class="rolo" id="rolo" tabindex="0" role="group" aria-label="AI workflow step">
-          <div class="rolo-halfstage top">
-            <div class="rolo-half" id="roloTopA"><div class="rolo-title"></div></div>
-            <div class="rolo-half" id="roloTopB"><div class="rolo-title"></div></div>
+          <div class="rolo-card rolo-sheet top" id="roloTop"><div class="rolo-title"></div></div>
+          <div class="rolo-card rolo-sheet bottom" id="roloBot"><div class="rolo-blurb"></div></div>
+          <div class="rolo-flap down" id="roloFlapDown" aria-hidden="true">
+            <div class="rolo-face rolo-sheet front"><div class="rolo-blurb"></div></div>
+            <div class="rolo-face rolo-sheet back"><div class="rolo-title"></div></div>
           </div>
-          <div class="rolo-halfstage bottom">
-            <div class="rolo-half" id="roloBotA"><div class="rolo-blurb"></div></div>
-            <div class="rolo-half" id="roloBotB"><div class="rolo-blurb"></div></div>
+          <div class="rolo-flap up" id="roloFlapUp" aria-hidden="true">
+            <div class="rolo-face rolo-sheet front"><div class="rolo-title"></div></div>
+            <div class="rolo-face rolo-sheet back"><div class="rolo-blurb"></div></div>
           </div>
           <div class="rolo-fold" aria-hidden="true">
             <span class="rolo-fold-shade"></span>
@@ -619,140 +630,207 @@ footer{
   var N = steps.length;
   var rolo = document.getElementById("rolo");
   var flowHint = document.getElementById("flowHint");
-  // real split-flap displays only ever move ONE half: going forward, the
-  // top half falls and the bottom half's new content is already waiting,
-  // static, underneath. going back, it's the mirror -- the bottom half
-  // rises and the top sits still. each half keeps its own independent
-  // front/back pair so it can do that falling flip on its own turn.
-  var topFaces = [document.getElementById("roloTopA"), document.getElementById("roloTopB")];
-  var botFaces = [document.getElementById("roloBotA"), document.getElementById("roloBotB")];
-  var inherent = [0, 180];
-  var topRot = 0, botRot = 0; // each a multiple of 180, independent of each other
+  var topCard = document.getElementById("roloTop");
+  var botCard = document.getElementById("roloBot");
+  var topText = topCard.querySelector(".rolo-title");
+  var botText = botCard.querySelector(".rolo-blurb");
+  // forward: the bottom card lifts, swings toward you over the rings and
+  // lands on the top card; its reverse side carries the new title.
+  // back: the mirror -- the top card drops down onto the bottom card.
+  var flapDown = document.getElementById("roloFlapDown");
+  var flapUp = document.getElementById("roloFlapUp");
+  var FLIP_MS = 650;
   var liveStep = 0;
   var flowTimer = null;
+  var active = null; // the flip in progress, so a new one can finish it first
+
+  topText.textContent = steps[0].t;
+  botText.textContent = steps[0].d;
+
+  function wrap(i){ return ((i % N) + N) % N; }
+  function faceText(flap, side){ return flap.querySelector(".rolo-face." + side + " > div"); }
 
   var tabsEl = document.getElementById("roloTabs");
   var roloTabBtns = steps.map(function(s, i){
     var b = document.createElement("button");
     b.type = "button";
-    b.className = "rolo-tab";
+    b.className = "rolo-tab" + (i === 0 ? " active" : "");
     b.textContent = String(i+1);
     b.setAttribute("role","tab");
     b.setAttribute("aria-selected", i===0 ? "true" : "false");
     b.setAttribute("aria-label", "Jump to " + s.t);
-    b.addEventListener("click", function(e){ e.stopPropagation(); goTo(i, true, 1); });
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      if(i !== liveStep) go(i > liveStep ? 1 : -1, i, true);
+    });
     tabsEl.appendChild(b);
     return b;
   });
 
-  function setTopContent(face, idx){ face.querySelector(".rolo-title").textContent = steps[idx].t; }
-  function setBotContent(face, idx){ face.querySelector(".rolo-blurb").textContent = steps[idx].d; }
-  setTopContent(topFaces[0], 0); setBotContent(botFaces[0], 0);
-  setTopContent(topFaces[1], 1); setBotContent(botFaces[1], 1);
-
-  function frontIdx(rot){ return (((Math.round(rot/180) % 2) + 2) % 2); }
-
-  function renderTop(extraDeg){
-    var e = extraDeg || 0;
-    topFaces.forEach(function(f, i){ f.style.transform = "rotateX(" + (-(topRot + e) + inherent[i]) + "deg)"; });
-  }
-  function renderBot(extraDeg){
-    var e = extraDeg || 0;
-    botFaces.forEach(function(f, i){ f.style.transform = "rotateX(" + (botRot + e + inherent[i]) + "deg)"; });
-  }
-  renderTop(0); renderBot(0);
-
-  function shade(faces){
-    if(reduced) return;
-    faces.forEach(function(f){
-      f.classList.remove("flipping"); void f.offsetWidth; // restart the keyframe if it's still mid-run
-      f.classList.add("flipping");
-      f.addEventListener("animationend", function handler(){
-        f.classList.remove("flipping");
-        f.removeEventListener("animationend", handler);
-      });
-    });
-  }
-
-  /* goTo moves to targetIdx. direction decides which half actually flips:
-     +1 falls the top half forward; -1 raises the bottom half. the other
-     half never rotates -- its text just crossfades, like a waiting vane. */
-  function goTo(targetIdx, userInteracted, direction){
-    targetIdx = ((targetIdx % N) + N) % N;
-    if(direction >= 0){
-      // forward: the BOTTOM card lifts around the rings and sweeps up,
-      // becoming the new top. the top card's own content is swapped
-      // silently underneath, covered by the sweep the whole time, and the
-      // bottom slot it leaves behind is revealed already holding the new blurb.
-      botRot += 180;
-      var bIdx = frontIdx(botRot);
-      setBotContent(botFaces[bIdx], targetIdx);
-      shade(botFaces);
-      renderBot(0);
-      setTopContent(topFaces[frontIdx(topRot)], targetIdx);
-    } else {
-      // backward: the mirror -- the top card drops around the rings to
-      // become the new bottom, and the top slot it vacates is already
-      // showing the new title underneath.
-      topRot -= 180;
-      var tIdx = frontIdx(topRot);
-      setTopContent(topFaces[tIdx], targetIdx);
-      shade(topFaces);
-      renderTop(0);
-      setBotContent(botFaces[frontIdx(botRot)], targetIdx);
-    }
-    liveStep = targetIdx;
+  function markStep(){
     rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
     roloTabBtns.forEach(function(b, i){ b.classList.toggle("active", i === liveStep); b.setAttribute("aria-selected", i === liveStep ? "true" : "false"); });
-    if(userInteracted){
-      if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-      flowHint.textContent = "Paused on this step. Swipe, click a step, or a tab, to compare another.";
-    }
+  }
+  function pause(){
+    if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
+    flowHint.textContent = "Paused on this step. Swipe, click a step, or a tab, to compare another.";
   }
 
-  function flip(direction, userInteracted){
-    goTo(liveStep + direction, userInteracted, direction);
+  /* light: read the flap's real angle off its live transform every frame,
+     darken each face as it turns edge-on to you, and darken the card it
+     is about to land on as its shadow closes over it. works the same for
+     an auto flip and for a card following your finger. */
+  var raf = 0;
+  function track(flap, covered){
+    cancelAnimationFrame(raf);
+    var faces = flap.querySelectorAll(".rolo-face");
+    (function tick(){
+      var m = getComputedStyle(flap).transform, ang = 0;
+      var v = m && m.match(/matrix3d\(([^)]+)\)/);
+      if(v){ var n = v[1].split(",").map(parseFloat); ang = Math.atan2(n[6], n[5]); }
+      var s = (Math.abs(Math.sin(ang)) * 0.65).toFixed(3);
+      faces[0].style.setProperty("--shade", s);
+      faces[1].style.setProperty("--shade", s);
+      covered.style.setProperty("--cast", (Math.abs(ang) / Math.PI * 0.5).toFixed(3));
+      raf = requestAnimationFrame(tick);
+    })();
   }
+  function untrack(flap, covered){
+    cancelAnimationFrame(raf); raf = 0;
+    flap.querySelectorAll(".rolo-face").forEach(function(f){ f.style.setProperty("--shade", 0); });
+    covered.style.setProperty("--cast", 0);
+  }
+
+  /* load the flap for a move to target, set up the card that will be
+     revealed underneath it, and show it resting exactly over the card it
+     is about to lift off -- identical content, so the swap is invisible */
+  function prep(dir, target){
+    var flap = dir > 0 ? flapDown : flapUp;
+    if(dir > 0){
+      faceText(flap, "front").textContent = steps[liveStep].d;
+      faceText(flap, "back").textContent = steps[target].t;
+      botText.textContent = steps[target].d;
+    } else {
+      faceText(flap, "front").textContent = steps[liveStep].t;
+      faceText(flap, "back").textContent = steps[target].d;
+      topText.textContent = steps[target].t;
+    }
+    flap.classList.add("instant", "live");
+    flap.style.transform = "rotateX(0deg)";
+    void flap.offsetWidth;
+    track(flap, dir > 0 ? topCard : botCard);
+    return flap;
+  }
+
+  function stow(flap, dir){
+    untrack(flap, dir > 0 ? topCard : botCard);
+    flap.classList.add("instant");
+    flap.classList.remove("live");
+    flap.style.transform = "rotateX(0deg)";
+  }
+
+  /* swing the flap from wherever it is now over to the far side. when it
+     lands, the card under it is rewritten to match its back, and the flap
+     is put away -- again invisibly, since they now show the same thing. */
+  function commit(flap, dir, target, userInteracted){
+    void flap.offsetWidth;
+    flap.classList.remove("instant");
+    flap.style.transform = "rotateX(" + (dir > 0 ? 180 : -180) + "deg)";
+    liveStep = target;
+    markStep();
+    if(userInteracted) pause();
+    var t = setTimeout(done, FLIP_MS + 20);
+    function done(){
+      clearTimeout(t);
+      if(active && active.done === done) active = null;
+      if(dir > 0) topText.textContent = steps[target].t;
+      else botText.textContent = steps[target].d;
+      stow(flap, dir);
+    }
+    active = { done: done };
+  }
+
+  /* a drag that didn't go far enough: swing back to rest, then undo the
+     card that had been readied underneath */
+  function cancel(flap, dir){
+    void flap.offsetWidth;
+    flap.classList.remove("instant");
+    flap.style.transform = "rotateX(0deg)";
+    var t = setTimeout(done, FLIP_MS + 20);
+    function done(){
+      clearTimeout(t);
+      if(active && active.done === done) active = null;
+      stow(flap, dir);
+      if(dir > 0) botText.textContent = steps[liveStep].d;
+      else topText.textContent = steps[liveStep].t;
+    }
+    active = { done: done };
+  }
+
+  function go(dir, target, userInteracted){
+    if(active) active.done();
+    target = wrap(target);
+    if(reduced){
+      liveStep = target;
+      topText.textContent = steps[target].t;
+      botText.textContent = steps[target].d;
+      markStep();
+      if(userInteracted) pause();
+      return;
+    }
+    commit(prep(dir, target), dir, target, userInteracted);
+  }
+  function flip(dir, userInteracted){ go(dir, liveStep + dir, userInteracted); }
 
   if(!reduced){ flowTimer = setInterval(function(){ flip(1, false); }, 5000); }
   else { flowHint.textContent = "Click a step, or a tab, to move through the steps."; }
 
-  /* swipe to flip -- only the half matching the live drag direction
-     previews any motion; the other half stays put, untouched */
-  var dragging = false, dragStartY = 0, dragDir = 1;
+  /* swipe: drag up lifts the bottom card toward you, drag down drops the
+     top card. the flap follows your finger; let go past the threshold and
+     it carries on over, short of it and it falls back. */
+  var drag = null, suppressClick = false;
   rolo.addEventListener("pointerdown", function(e){
-    dragging = true; dragStartY = e.clientY; dragDir = 1;
-    if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-    topFaces.concat(botFaces).forEach(function(f){ f.classList.add("dragging"); });
+    suppressClick = false;
+    if(active) active.done();
+    drag = { startY: e.clientY, dy: 0, dir: 0, flap: null };
     rolo.setPointerCapture(e.pointerId);
   });
   rolo.addEventListener("pointermove", function(e){
-    if(!dragging) return;
-    var dy = dragStartY - e.clientY; // drag up: falls forward, like flicking a card over
-    var extra = Math.max(-140, Math.min(140, dy * 1.1));
-    dragDir = dy >= 0 ? 1 : -1;
-    if(dragDir > 0){ renderBot(extra); renderTop(0); }
-    else { renderTop(extra); renderBot(0); }
-  });
-  function endSwipe(e){
-    if(!dragging) return;
-    dragging = false;
-    topFaces.concat(botFaces).forEach(function(f){ f.classList.remove("dragging"); });
-    var dy = dragStartY - e.clientY;
-    if(Math.abs(dy) < 6){
-      renderTop(0); renderBot(0);
-      flowHint.textContent = "Paused on this step. Swipe, click a step, or a tab, to compare another.";
-      if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-      return;
+    if(!drag || reduced) return;
+    var dy = drag.startY - e.clientY;
+    drag.dy = dy;
+    if(!drag.flap && Math.abs(dy) < 6) return;
+    var dir = dy >= 0 ? 1 : -1;
+    if(dir !== drag.dir){
+      if(drag.flap){
+        stow(drag.flap, drag.dir);
+        if(drag.dir > 0) botText.textContent = steps[liveStep].d;
+        else topText.textContent = steps[liveStep].t;
+      } else {
+        pause();
+      }
+      drag.dir = dir;
+      drag.flap = prep(dir, wrap(liveStep + dir));
     }
-    if(Math.abs(dy) > 40){ flip(dy > 0 ? 1 : -1, true); }
-    else { renderTop(0); renderBot(0); }
+    var deg = Math.min(178, Math.abs(dy) * 1.5);
+    drag.flap.style.transform = "rotateX(" + (dir * deg) + "deg)";
+  });
+  function endDrag(){
+    if(!drag) return;
+    var d = drag; drag = null;
+    if(Math.abs(d.dy) >= 6) suppressClick = true;
+    if(!d.flap) return; // a tap -- the click handler flips it
+    if(Math.abs(d.dy) > 40) commit(d.flap, d.dir, wrap(liveStep + d.dir), true);
+    else cancel(d.flap, d.dir);
   }
-  rolo.addEventListener("pointerup", endSwipe);
-  rolo.addEventListener("pointercancel", endSwipe);
+  rolo.addEventListener("pointerup", endDrag);
+  rolo.addEventListener("pointercancel", endDrag);
 
   /* click = advance one, same as a short upward swipe */
-  rolo.addEventListener("click", function(){ flip(1, true); });
+  rolo.addEventListener("click", function(){
+    if(suppressClick){ suppressClick = false; return; }
+    flip(1, true);
+  });
 
   /* keyboard */
   rolo.addEventListener("keydown", function(e){

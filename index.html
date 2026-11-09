@@ -128,6 +128,7 @@ section.process{padding-block:10px 18px;}
    without this, a bare rotateX reads flat: perspective alone isn't enough
    to sell a physical surface catching and losing the light as it turns. */
 .rolo-half::after{content:"";position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;}
+.rolo-half.flipping{z-index:4;}
 .rolo-half.flipping::after{animation:roloShade .55s cubic-bezier(.45,0,.2,1);}
 @keyframes roloShade{0%{opacity:0;}48%{opacity:.62;}52%{opacity:.62;}100%{opacity:0;}}
 .rolo-halfstage.top .rolo-half{border-radius:12px;transform-origin:center bottom;box-shadow:0 3px 7px rgba(0,0,0,.45);}
@@ -679,21 +680,26 @@ footer{
   function goTo(targetIdx, userInteracted, direction){
     targetIdx = ((targetIdx % N) + N) % N;
     if(direction >= 0){
-      topRot -= 180;
-      var tIdx = frontIdx(topRot);
-      setTopContent(topFaces[tIdx], targetIdx);
-      shade(topFaces);
-      renderTop(0);
-      // the bottom never moves and never fades -- it's already correct,
-      // waiting underneath, exactly like the real mechanism
-      setBotContent(botFaces[frontIdx(botRot)], targetIdx);
-    } else {
+      // forward: the BOTTOM card lifts around the rings and sweeps up,
+      // becoming the new top. the top card's own content is swapped
+      // silently underneath, covered by the sweep the whole time, and the
+      // bottom slot it leaves behind is revealed already holding the new blurb.
       botRot += 180;
       var bIdx = frontIdx(botRot);
       setBotContent(botFaces[bIdx], targetIdx);
       shade(botFaces);
       renderBot(0);
       setTopContent(topFaces[frontIdx(topRot)], targetIdx);
+    } else {
+      // backward: the mirror -- the top card drops around the rings to
+      // become the new bottom, and the top slot it vacates is already
+      // showing the new title underneath.
+      topRot -= 180;
+      var tIdx = frontIdx(topRot);
+      setTopContent(topFaces[tIdx], targetIdx);
+      shade(topFaces);
+      renderTop(0);
+      setBotContent(botFaces[frontIdx(botRot)], targetIdx);
     }
     liveStep = targetIdx;
     rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
@@ -725,8 +731,8 @@ footer{
     var dy = dragStartY - e.clientY; // drag up: falls forward, like flicking a card over
     var extra = Math.max(-140, Math.min(140, dy * 1.1));
     dragDir = dy >= 0 ? 1 : -1;
-    if(dragDir > 0){ renderTop(extra); renderBot(0); }
-    else { renderBot(extra); renderTop(0); }
+    if(dragDir > 0){ renderBot(extra); renderTop(0); }
+    else { renderTop(extra); renderBot(0); }
   });
   function endSwipe(e){
     if(!dragging) return;

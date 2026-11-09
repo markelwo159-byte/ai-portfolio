@@ -96,28 +96,33 @@ h2{
    click any one to stop the cycle and read it on your own time. ---------- */
 section.process{padding-block:10px 18px;}
 .workflowcard{background:var(--panel);border-radius:14px;padding:16px 16px 14px;}
-.flowsteps{display:flex;align-items:center;flex-wrap:wrap;gap:3px;margin-bottom:10px;}
-.fbox{
-  display:flex;flex-direction:column;align-items:flex-start;gap:3px;
-  padding:10px 13px;border:1px solid transparent;background:transparent;border-radius:9px;
-  min-width:88px;font-family:inherit;color:inherit;text-align:left;cursor:pointer;
-  transition:background .5s ease, border-color .5s ease, box-shadow .5s ease, transform .3s ease;
+.rolostage{perspective:900px;}
+.rolo{
+  position:relative;height:148px;touch-action:none;cursor:grab;
+  -webkit-user-select:none;user-select:none;
 }
-.fbox:hover,.fbox:focus-visible{background:var(--panel-2);outline:none;}
-.ftitle{font-size:14.5px;font-family:"Big Shoulders Display",sans-serif;font-weight:600;white-space:nowrap;transition:color .5s ease;}
-.farrow{color:var(--line);font-size:15px;flex:0 0 auto;padding:0 1px;}
-.fbox.live{border-color:var(--accent);background:var(--panel-2);transform:translateY(-2px);}
-.fbox.live .ftitle{color:var(--ink);}
-.flowdesc{color:var(--muted);font-size:15px;line-height:1.55;min-height:1.6em;transition:opacity .3s ease;margin-top:4px;}
-.flowhint{font-size:13px;color:var(--line);margin:8px 0 0;}
+.rolo:active{cursor:grabbing;}
+.rolo:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px;}
+.roloface{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:1px solid var(--line);border-radius:12px;
+  background:
+    repeating-linear-gradient(0deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
+    var(--bg2);
+  display:flex;flex-direction:column;justify-content:center;gap:9px;
+  padding:18px 22px;transition:transform .6s cubic-bezier(.2,.8,.2,1);
+}
+.roloface.dragging{transition:none;}
+.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;}
+.rolo-blurb{color:var(--muted);font-size:15px;line-height:1.55;}
+.flowhint{font-size:13px;color:var(--line);margin:10px 0 0;}
 @media (max-width:680px){
-  .flowsteps{flex-direction:column;align-items:stretch;gap:2px;}
-  .farrow{align-self:center;transform:rotate(90deg);font-size:13px;padding:1px 0;}
-  .fbox{flex-direction:row;align-items:center;gap:12px;min-width:0;padding:12px 14px;}
-  .ftitle{font-size:16px;}
-  .flowdesc{font-size:14.5px;}
+  .rolo{height:172px;}
+  .rolo-title{font-size:21px;}
+  .rolo-blurb{font-size:14.5px;}
 }
-@media (prefers-reduced-motion:reduce){.fbox{transition:none;}}
+@media (prefers-reduced-motion:reduce){.roloface{transition:none;}}
 
 /* ---------- watch it work: a tiny storyboard, not a diagram ---------- */
 section.demo{padding-block:4px 22px;}
@@ -275,7 +280,7 @@ footer{
 }
 </style>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"> <!-- taste-skill-ignore: mono here loads only the schematic diagram's annotation face -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Permanent+Marker&display=swap"> <!-- taste-skill-ignore: mono here loads only the schematic diagram's annotation face; Permanent Marker is the chalk-on-blueprint workflow card title -->
 
 <canvas id="emberLayer"></canvas>
 <canvas id="sparkLayer"></canvas>
@@ -308,9 +313,19 @@ footer{
   <section class="process">
     <h2>AI Workflow</h2>
     <div class="workflowcard">
-      <div class="flowsteps" id="flowsteps" role="tablist" aria-label="AI workflow steps"></div>
-      <p class="flowdesc" id="flowDesc"></p>
-      <p class="flowhint" id="flowHint">Auto-advancing. Click any step to stop and read it.</p>
+      <div class="rolostage">
+        <div class="rolo" id="rolo" tabindex="0" role="group" aria-label="AI workflow step">
+          <div class="roloface" id="roloFaceA">
+            <div class="rolo-title"></div>
+            <div class="rolo-blurb"></div>
+          </div>
+          <div class="roloface" id="roloFaceB">
+            <div class="rolo-title"></div>
+            <div class="rolo-blurb"></div>
+          </div>
+        </div>
+      </div>
+      <p class="flowhint" id="flowHint">Auto-advancing. Swipe up or down, or click, to move through the steps.</p>
     </div>
   </section>
 
@@ -538,8 +553,9 @@ footer{
     }
   }
 
-  /* AI workflow: six boxes, left to right, with arrows between them.
-     the orange highlight travels box to box; no separate moving dot. */
+  /* AI workflow: a Rolodex card. title on top, blurb below, on one face.
+     it auto-flips to the next step on a timer, and a real swipe (or an
+     arrow key, or a click) flips it early, in either direction. */
   var steps = [
     {t:"Scope",d:"Define exactly what the system must do, and just as precisely, what it must never do, before a single line gets built."},
     {t:"Direct",d:"Specify the architecture and the edge cases in full, then let Claude build to that specification. I am directing the build, not typing it line by line."},
@@ -548,64 +564,92 @@ footer{
     {t:"Verify",d:"Confirm the system actually works under real conditions: physical devices, both color themes, reduced motion settings, and a console with zero errors."},
     {t:"Ship",d:"Deploy to run unattended in production, with monitoring in place to know the moment it fails."}
   ];
-  var flowsteps = document.getElementById("flowsteps");
-  var flowDesc = document.getElementById("flowDesc");
+  var N = steps.length;
+  var rolo = document.getElementById("rolo");
   var flowHint = document.getElementById("flowHint");
-  steps.forEach(function(s, i){
-    if(i>0){
-      var arrow = document.createElement("span");
-      arrow.className = "farrow";
-      arrow.textContent = "→";
-      arrow.setAttribute("aria-hidden","true");
-      flowsteps.appendChild(arrow);
-    }
-    var box = document.createElement("button");
-    box.type = "button";
-    box.className = "fbox";
-    box.id = "fbox"+i;
-    box.setAttribute("role","tab");
-    box.setAttribute("aria-selected", i===0 ? "true" : "false");
-    box.innerHTML = '<span class="ftitle">'+s.t+'</span>';
-    box.addEventListener("click", function(){ selectStep(i, true); });
-    flowsteps.appendChild(box);
-  });
+  var faces = [document.getElementById("roloFaceA"), document.getElementById("roloFaceB")];
+  var inherent = [0, 180]; // each face's own baseline rotation
+  var rotation = 0; // multiple of 180; which physical face is up front
   var liveStep = 0;
   var flowTimer = null;
 
-  function showStep(i, animate){
-    for(var k=0;k<steps.length;k++){
-      var b = document.getElementById("fbox"+k);
-      b.classList.toggle("live", k===i);
-      b.setAttribute("aria-selected", k===i ? "true" : "false");
-    }
-    if(animate && !reduced){
-      flowDesc.style.opacity = 0;
-      setTimeout(function(){
-        flowDesc.textContent = steps[i].d;
-        flowDesc.style.opacity = 1;
-      }, 150);
-    } else {
-      flowDesc.textContent = steps[i].d;
-      flowDesc.style.opacity = 1;
-    }
+  function setFaceContent(face, idx){
+    face.querySelector(".rolo-title").textContent = steps[idx].t;
+    face.querySelector(".rolo-blurb").textContent = steps[idx].d;
+  }
+  setFaceContent(faces[0], 0);
+  setFaceContent(faces[1], 1);
+
+  function render(extraDeg){
+    faces.forEach(function(f, i){
+      f.style.transform = "rotateX(" + (rotation + inherent[i] + (extraDeg||0)) + "deg)";
+    });
+  }
+  render(0);
+
+  function visibleFaceIndex(){
+    return (((Math.round(rotation/180) % 2) + 2) % 2);
   }
 
-  function selectStep(i, userClicked){
-    liveStep = i;
-    showStep(liveStep, !userClicked);
-    if(userClicked){
+  function flip(direction, userInteracted){
+    rotation += 180 * direction;
+    liveStep = ((liveStep + direction) % N + N) % N;
+    render(0);
+    rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
+    // the face now rotating out of view: load it with the step that will
+    // follow this one, ready for the next time it swings back around.
+    // synchronous and self contained, so rapid flips never race each other.
+    var hiddenIdx = 1 - visibleFaceIndex();
+    var preloadIdx = ((liveStep + direction) % N + N) % N;
+    setFaceContent(faces[hiddenIdx], preloadIdx);
+    if(userInteracted){
       if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-      flowHint.textContent = "Paused on this step. Click another to compare.";
+      flowHint.textContent = "Paused on this step. Swipe, click, or use the arrow keys to compare another.";
     }
   }
 
-  function tickFlow(){
-    showStep(liveStep, true);
-    liveStep = (liveStep+1) % steps.length;
+  if(!reduced){ flowTimer = setInterval(function(){ flip(1, false); }, 5000); }
+  else { flowHint.textContent = "Click, or use the arrow keys, to move through the steps."; }
+
+  /* swipe to flip */
+  var dragging = false, dragStartY = 0;
+  rolo.addEventListener("pointerdown", function(e){
+    dragging = true; dragStartY = e.clientY;
+    if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
+    faces.forEach(function(f){ f.classList.add("dragging"); });
+    rolo.setPointerCapture(e.pointerId);
+  });
+  rolo.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    var dy = dragStartY - e.clientY; // drag up: card rolls away, like flicking a rolodex card over
+    var extra = Math.max(-140, Math.min(140, dy * 1.1));
+    render(extra);
+  });
+  function endSwipe(e){
+    if(!dragging) return;
+    dragging = false;
+    faces.forEach(function(f){ f.classList.remove("dragging"); });
+    var dy = dragStartY - e.clientY;
+    if(Math.abs(dy) < 6){
+      render(0);
+      flowHint.textContent = "Paused on this step. Swipe, click, or use the arrow keys to compare another.";
+      if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
+      return;
+    }
+    if(Math.abs(dy) > 40){ flip(dy > 0 ? 1 : -1, true); }
+    else { render(0); }
   }
-  showStep(0, false);
-  if(!reduced){ flowTimer = setInterval(tickFlow, 5000); liveStep = 1; }
-  else { flowHint.textContent = "Click any step to read it."; }
+  rolo.addEventListener("pointerup", endSwipe);
+  rolo.addEventListener("pointercancel", endSwipe);
+
+  /* click = advance one, same as a short upward swipe */
+  rolo.addEventListener("click", function(){ flip(1, true); });
+
+  /* keyboard */
+  rolo.addEventListener("keydown", function(e){
+    if(e.key === "ArrowDown"){ e.preventDefault(); flip(1, true); }
+    else if(e.key === "ArrowUp"){ e.preventDefault(); flip(-1, true); }
+  });
 
   /* click spark burst, ties the weld theme to the interaction itself */
   var canvas = document.getElementById("sparkLayer");

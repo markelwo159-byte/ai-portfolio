@@ -113,19 +113,21 @@ section.process{padding-block:10px 18px;}
 .rolo-card,.rolo-flap{position:absolute;left:0;right:0;height:calc(50% - 3px);}
 .rolo-card.top,.rolo-flap.up{top:0;}
 .rolo-card.bottom,.rolo-flap.down{bottom:0;}
+/* a yellow index card: ruled blue lines, a red margin rule, a soft paper
+   sheen, and dark ink on top */
 .rolo-sheet{
-  border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  border:1px solid #d9c46a;border-radius:5px;overflow:hidden;
   background:
-    linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0) 35%, rgba(0,0,0,.2) 100%),
-    repeating-linear-gradient(0deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
-    repeating-linear-gradient(90deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
-    var(--bg2);
-  display:flex;align-items:center;justify-content:center;padding:8px 22px;
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 40%, rgba(120,90,0,.12) 100%),
+    linear-gradient(90deg, transparent 21px, rgba(214,72,72,.45) 21px 22px, transparent 22px),
+    repeating-linear-gradient(180deg, transparent 0 17px, rgba(74,112,170,.28) 17px 18px),
+    #f8e99a;
+  display:flex;align-items:center;justify-content:center;padding:8px 26px 8px 34px;
 }
-.rolo-card{z-index:1;box-shadow:0 2px 6px rgba(0,0,0,.4);}
+.rolo-card{z-index:1;box-shadow:0 2px 6px rgba(0,0,0,.45);}
 /* shadow the swinging flap throws onto the card it is about to land on;
    --cast is set every frame from the flap's measured angle */
-.rolo-card::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--cast,0);pointer-events:none;}
+.rolo-card::after{content:"";position:absolute;inset:0;background:#3b2805;opacity:var(--cast,0);pointer-events:none;}
 /* the hinge sits on the ring line, 3px outside each flap's edge, so a 180
    degree swing mirrors it exactly into the opposite slot */
 .rolo-flap{
@@ -141,9 +143,9 @@ section.process{padding-block:10px 18px;}
 /* each face darkens as it turns edge-on to the light and clears as it
    settles (--shade, set every frame from the measured angle); without it
    a bare rotateX reads as flat paper sliding */
-.rolo-face::after{content:"";position:absolute;inset:0;background:#000;opacity:var(--shade,0);pointer-events:none;}
-.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;text-align:center;}
-.rolo-blurb{color:var(--muted);font-size:15px;line-height:1.5;text-align:center;}
+.rolo-face::after{content:"";position:absolute;inset:0;background:#3b2805;opacity:var(--shade,0);pointer-events:none;}
+.rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#1c2640;letter-spacing:.01em;text-align:center;}
+.rolo-blurb{color:#3f3a2a;font-size:15px;line-height:1.5;text-align:center;}
 /* the seam between the two card halves, and the two binder rings it hangs
    on; fixed in place, above the flipping faces, since the rings don't rotate */
 .rolo-fold{position:absolute;left:0;right:0;top:50%;height:0;z-index:5;pointer-events:none;}

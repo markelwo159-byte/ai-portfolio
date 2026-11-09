@@ -103,18 +103,26 @@ section.process{padding-block:10px 18px;}
 }
 .rolo:active{cursor:grabbing;}
 .rolo:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:12px;}
-.roloface{
+/* two independent half-cards, each hinged at the seam (not at the card's
+   own center), so the top edge and bottom edge fold away from each other
+   around the rings, like a real card bending around them -- rather than
+   the whole rectangle tumbling as one rigid plane. */
+.rolo-halfstage{position:absolute;left:0;right:0;height:50%;}
+.rolo-halfstage.top{top:0;}
+.rolo-halfstage.bottom{bottom:0;}
+.rolo-half{
   position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  border:1px solid var(--line);border-radius:12px;
+  border:1px solid var(--line);
   background:
     repeating-linear-gradient(0deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
     repeating-linear-gradient(90deg, rgba(143,167,199,0.09) 0 1px, transparent 1px 22px),
     var(--bg2);
-  display:flex;flex-direction:column;
+  display:flex;align-items:center;justify-content:center;padding:8px 22px;
   transition:transform .6s cubic-bezier(.2,.8,.2,1);
 }
-.roloface.dragging{transition:none;}
-.rolo-top,.rolo-bottom{flex:1 1 50%;display:flex;align-items:center;justify-content:center;padding:8px 22px;min-height:0;}
+.rolo-half.dragging{transition:none;}
+.rolo-halfstage.top .rolo-half{border-bottom:none;border-radius:12px 12px 0 0;transform-origin:center bottom;}
+.rolo-halfstage.bottom .rolo-half{border-top:none;border-radius:0 0 12px 12px;transform-origin:center top;}
 .rolo-title{font-family:"Permanent Marker",cursive;font-weight:400;font-size:23px;color:#f3f6fb;letter-spacing:.01em;text-align:center;}
 .rolo-blurb{color:var(--muted);font-size:15px;line-height:1.5;text-align:center;}
 /* the seam between the two card halves, and the two binder rings it hangs
@@ -146,7 +154,7 @@ section.process{padding-block:10px 18px;}
   .rolostage{padding-right:30px;}
   .rolo-tab{width:25px;height:20px;font-size:11px;}
 }
-@media (prefers-reduced-motion:reduce){.roloface{transition:none;}}
+@media (prefers-reduced-motion:reduce){.rolo-half{transition:none;}}
 
 /* ---------- watch it work: a tiny storyboard, not a diagram ---------- */
 section.demo{padding-block:4px 22px;}
@@ -339,13 +347,13 @@ footer{
     <div class="workflowcard">
       <div class="rolostage">
         <div class="rolo" id="rolo" tabindex="0" role="group" aria-label="AI workflow step">
-          <div class="roloface" id="roloFaceA">
-            <div class="rolo-top"><div class="rolo-title"></div></div>
-            <div class="rolo-bottom"><div class="rolo-blurb"></div></div>
+          <div class="rolo-halfstage top">
+            <div class="rolo-half" id="roloTopA"><div class="rolo-title"></div></div>
+            <div class="rolo-half" id="roloTopB"><div class="rolo-title"></div></div>
           </div>
-          <div class="roloface" id="roloFaceB">
-            <div class="rolo-top"><div class="rolo-title"></div></div>
-            <div class="rolo-bottom"><div class="rolo-blurb"></div></div>
+          <div class="rolo-halfstage bottom">
+            <div class="rolo-half" id="roloBotA"><div class="rolo-blurb"></div></div>
+            <div class="rolo-half" id="roloBotB"><div class="rolo-blurb"></div></div>
           </div>
           <div class="rolo-fold" aria-hidden="true">
             <span class="rolo-fold-shade"></span>
@@ -598,7 +606,11 @@ footer{
   var N = steps.length;
   var rolo = document.getElementById("rolo");
   var flowHint = document.getElementById("flowHint");
-  var faces = [document.getElementById("roloFaceA"), document.getElementById("roloFaceB")];
+  // two independently hinged halves, each with its own front/back pair;
+  // both pairs always carry the same rotation, so they fold in lockstep
+  var topFaces = [document.getElementById("roloTopA"), document.getElementById("roloTopB")];
+  var botFaces = [document.getElementById("roloBotA"), document.getElementById("roloBotB")];
+  var allFaces = topFaces.concat(botFaces);
   var inherent = [0, 180]; // each face's own baseline rotation
   var rotation = 0; // multiple of 180; which physical face is up front
   var liveStep = 0;
@@ -618,16 +630,15 @@ footer{
     return b;
   });
 
-  function setFaceContent(face, idx){
-    face.querySelector(".rolo-title").textContent = steps[idx].t;
-    face.querySelector(".rolo-blurb").textContent = steps[idx].d;
-  }
-  setFaceContent(faces[0], 0);
-  setFaceContent(faces[1], 1);
+  function setTopContent(face, idx){ face.querySelector(".rolo-title").textContent = steps[idx].t; }
+  function setBotContent(face, idx){ face.querySelector(".rolo-blurb").textContent = steps[idx].d; }
+  setTopContent(topFaces[0], 0); setBotContent(botFaces[0], 0);
+  setTopContent(topFaces[1], 1); setBotContent(botFaces[1], 1);
 
   function render(extraDeg){
-    faces.forEach(function(f, i){
-      f.style.transform = "rotateX(" + (rotation + inherent[i] + (extraDeg||0)) + "deg)";
+    allFaces.forEach(function(f, i){
+      var deg = rotation + inherent[i % 2] + (extraDeg||0);
+      f.style.transform = "rotateX(" + deg + "deg)";
     });
   }
   render(0);
@@ -644,7 +655,8 @@ footer{
     targetIdx = ((targetIdx % N) + N) % N;
     rotation += 180 * (spin || 1);
     var frontIdx = visibleFaceIndex();
-    setFaceContent(faces[frontIdx], targetIdx);
+    setTopContent(topFaces[frontIdx], targetIdx);
+    setBotContent(botFaces[frontIdx], targetIdx);
     liveStep = targetIdx;
     render(0);
     rolo.setAttribute("aria-label", "AI workflow step: " + steps[liveStep].t + ". " + steps[liveStep].d);
@@ -667,7 +679,7 @@ footer{
   rolo.addEventListener("pointerdown", function(e){
     dragging = true; dragStartY = e.clientY;
     if(flowTimer){ clearInterval(flowTimer); flowTimer = null; }
-    faces.forEach(function(f){ f.classList.add("dragging"); });
+    allFaces.forEach(function(f){ f.classList.add("dragging"); });
     rolo.setPointerCapture(e.pointerId);
   });
   rolo.addEventListener("pointermove", function(e){
@@ -679,7 +691,7 @@ footer{
   function endSwipe(e){
     if(!dragging) return;
     dragging = false;
-    faces.forEach(function(f){ f.classList.remove("dragging"); });
+    allFaces.forEach(function(f){ f.classList.remove("dragging"); });
     var dy = dragStartY - e.clientY;
     if(Math.abs(dy) < 6){
       render(0);

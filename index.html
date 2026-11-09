@@ -371,6 +371,29 @@ dt:first-child{margin-top:0;}
 dd{margin:4px 0 0;line-height:1.55;font-size:16px;}
 .tools{color:var(--good);font-size:15px;}
 
+/* detailed workflow: an expandable stage-by-stage account under each system */
+.wfx-btn{display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:10px 16px;border-radius:8px;
+  border:1px solid var(--line);background:var(--bg2);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer;
+  transition:border-color .2s ease,background .2s ease,transform .15s ease;}
+.wfx-btn:hover{border-color:var(--accent);}
+.wfx-btn:active{transform:scale(.98);}
+.wfx-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.wfx-btn svg{width:14px;height:14px;transition:transform .25s ease;}
+.wfx-btn[aria-expanded="true"] svg{transform:rotate(180deg);}
+.wfx{margin-top:16px;}
+.wfx[hidden]{display:none;}
+.wfx ol{list-style:none;margin:0;padding:0;counter-reset:wfx;display:grid;gap:14px;}
+.wfx li{counter-increment:wfx;display:grid;grid-template-columns:34px 1fr;gap:0 12px;animation:wfxIn .4s ease both;}
+.wfx li::before{content:counter(wfx);grid-row:span 2;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--accent);
+  color:var(--accent);font-weight:700;font-size:14px;display:grid;place-items:center;}
+.wfx li b{font-size:16px;color:var(--ink);}
+.wfx li span{color:var(--muted);font-size:15.5px;line-height:1.55;}
+.wfx-eng{margin:18px 0 0;font-size:15px;line-height:1.55;color:var(--good);}
+.wfx-eng b{color:var(--ink);font-weight:600;}
+.wfx-note{margin:8px 0 0;font-size:14px;color:var(--muted);}
+@keyframes wfxIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.wfx li{animation:none;}.wfx-btn,.wfx-btn svg{transition:none;}}
+
 .fade-enter{animation:fadein .35s ease both;}
 @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @media (prefers-reduced-motion:reduce){
@@ -470,7 +493,7 @@ footer{
   </section>
 
   <section class="stage" id="stage">
-    <h2>Eight systems I have shipped</h2>
+    <h2>Sample systems shipped</h2>
     <p class="section-sub">Select any system below to see how it works.</p>
     <div class="stagebox">
       <div class="tabs" role="tablist" aria-label="Systems shipped" id="tabs"></div>
@@ -628,6 +651,206 @@ footer{
       flow:[["Market history","price data"],["Backtest + validate","directed by Claude"],["Live tested","execution engine"]] }
   ];
 
+  var details = {
+ "catalog": {
+  "steps": [
+   [
+    "Fetch",
+    "The supplier's full inventory and price files are pulled over FTP each morning and archived as a dated snapshot, so any day's run can be replayed."
+   ],
+   [
+    "Normalize and diff",
+    "Every record is mapped to one schema (SKU, metal, size, stock, cost) and compared against the previous snapshot. Only changed records move forward."
+   ],
+   [
+    "Reprice under guard rails",
+    "Retail prices are recomputed from cost. Any change larger than a set limit is held for review instead of being published."
+   ],
+   [
+    "Publish",
+    "Changes are written through the Shopify Admin GraphQL API in batches, within its rate limits, with every write logged."
+   ],
+   [
+    "Audit",
+    "Each run produces a report of what changed, what was held and why. Store wide rules, such as metal listed as the first option, are re-applied after every import."
+   ]
+  ],
+  "eng": "Python, directed by Claude. Runs unattended on a schedule; re-runs are safe because only differences are written. State and run history are stored locally for audit."
+ },
+ "tryon": {
+  "steps": [
+   [
+    "Capture",
+    "The browser opens the front camera. Frames are processed on the device and never uploaded."
+   ],
+   [
+    "Landmarks",
+    "Google MediaPipe's face landmark model runs in the browser on every frame, locating the face, the irises and the ear region."
+   ],
+   [
+    "Scale",
+    "Iris diameter, a near constant 11.7 mm across adults, converts pixels to millimeters, so the earring is drawn at its true physical size."
+   ],
+   [
+    "Render",
+    "The earring is anchored at the earlobe and follows head pose, verified accurate to roughly a 45 degree turn."
+   ],
+   [
+    "Present",
+    "A sizing estimate note stays on screen at all times, and pinch zoom enlarges the whole picture, never the earring alone, so the scale stays honest."
+   ]
+  ],
+  "eng": "JavaScript with MediaPipe running in WebAssembly, directed by Claude. No server component; verified on physical phones."
+ },
+ "imagegen": {
+  "steps": [
+   [
+    "Brief",
+    "Each image starts from a written brief: subject, composition, lighting, surface, and the exact product it must show."
+   ],
+   [
+    "Reference",
+    "Real product photography is supplied alongside the brief, so the generated piece matches the item for sale."
+   ],
+   [
+    "Generate",
+    "Gemini produces candidates against the brief."
+   ],
+   [
+    "Review",
+    "Every candidate is checked against the real product (metal color, stones, setting) and against the rule that no pose or setup repeats across the catalog."
+   ],
+   [
+    "Format",
+    "Approved images are cropped for each placement: product page, banner, and a dedicated full bleed 9:16 frame for Reels and Stories."
+   ]
+  ],
+  "eng": "Gemini image generation under detailed prompt engineering, with a manual approval gate before anything is published."
+ },
+ "preview3d": {
+  "steps": [
+   [
+    "Specify",
+    "Dimensions, stone sizes and setting style are taken from the client's request and reference images."
+   ],
+   [
+    "Model",
+    "Claude writes parametric CAD code that builds the piece from those dimensions, so a revision is a changed parameter, not a redraw."
+   ],
+   [
+    "Validate",
+    "Manufacturing rules are checked in code, for example that every stone is held by at least three prongs, and metal weight is estimated before casting."
+   ],
+   [
+    "Prepare for the web",
+    "The mesh is reduced and packed for fast loading, and diamonds are rendered with a custom refraction shader rather than flat color."
+   ],
+   [
+    "Share",
+    "The client receives a link, turns the piece from any angle, and requests changes before metal is committed."
+   ]
+  ],
+  "eng": "Python parametric CAD (build123d) and Blender, directed by Claude. Viewers built on three.js and WebGL; the two rings on this page run on the same code."
+ },
+ "imaging": {
+  "steps": [
+   [
+    "Intake",
+    "New supplier photos are collected as products are imported."
+   ],
+   [
+    "Isolate",
+    "The background is removed and the piece separated from it."
+   ],
+   [
+    "Recolor and place",
+    "The background is set to the storefront palette, and every piece is scaled and centered on one standard canvas."
+   ],
+   [
+    "Publish",
+    "Images are uploaded to the product and grouped, so each variant (metal, size) shows its own photos."
+   ],
+   [
+    "Cache",
+    "Processed results are cached, so later runs skip finished images and handle only new ones."
+   ]
+  ],
+  "eng": "Python image processing and the Shopify Admin API, directed by Claude. Runs in bulk, without manual editing."
+ },
+ "social": {
+  "steps": [
+   [
+    "Plan",
+    "A content calendar sets the topics, the products featured and the posting dates."
+   ],
+   [
+    "Draft",
+    "Captions are drafted in the brand's voice for each scheduled post."
+   ],
+   [
+    "Brand",
+    "Images are selected and the store monogram is applied consistently."
+   ],
+   [
+    "Schedule",
+    "The batch is scheduled to Instagram and Facebook together through the Meta Graph API."
+   ]
+  ],
+  "eng": "Python and the Meta Graph API, directed by Claude."
+ },
+ "seo": {
+  "steps": [
+   [
+    "Generate",
+    "Title tags and meta descriptions are generated for every product from its own attributes."
+   ],
+   [
+    "Structure",
+    "Structured product data is published on every product page, so search engines read price, stock and material directly."
+   ],
+   [
+    "Feed",
+    "Google feed attributes (color, material, size) are written to every variant, and Google specific titles are supplied through a Merchant Center supplemental feed."
+   ],
+   [
+    "Approve",
+    "The feed passed Google Merchant Center review, with 84,400 products approved."
+   ],
+   [
+    "Measure",
+    "Campaign results are read against real shopper traffic, with identified bot traffic excluded."
+   ]
+  ],
+  "eng": "Python, Shopify metafields, Google Merchant Center and Meta Ads, directed by Claude."
+ },
+ "research": {
+  "steps": [
+   [
+    "Data",
+    "Multi year historical market data is collected and verified, including session times and contract rolls."
+   ],
+   [
+    "Hypothesis",
+    "Each idea is written down as a testable rule before any test runs, and checked against a log of every prior experiment."
+   ],
+   [
+    "Backtest",
+    "Tests run under a strict no look ahead rule: the simulation only ever sees data that existed at that moment."
+   ],
+   [
+    "Validate",
+    "A result must hold out of sample, on two separate markets, against a matched control, with drawdown weighed ahead of profit."
+   ],
+   [
+    "Live test",
+    "What survives runs on a live execution engine, and its fills are compared against the simulation's."
+   ]
+  ],
+  "eng": "Python, directed by Claude: vectorized backtests, an event driven execution engine, a dedicated compute machine, and a durable log of every experiment."
+ }
+};
+  var wfxOpen = false;
+
   var tabs = document.getElementById("tabs");
   var panel = document.getElementById("panel");
 
@@ -663,6 +886,18 @@ footer{
     return p.join("");
   }
 
+  // stays open across systems once a reader has asked for the detail
+  function wfxHtml(key){
+    var d = details[key];
+    if(!d) return "";
+    return '<button class="wfx-btn" type="button" aria-expanded="'+wfxOpen+'" aria-controls="wfx"><span>'+(wfxOpen ? "Hide detailed workflow" : "Detailed workflow")+'</span>' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<div class="wfx" id="wfx"'+(wfxOpen ? "" : " hidden")+'><ol>' +
+        d.steps.map(function(st, i){ return '<li style="animation-delay:'+(i*60)+'ms"><b>'+st[0]+'</b><span>'+st[1]+'</span></li>'; }).join("") +
+      '</ol><p class="wfx-eng"><b>How it is programmed.</b> '+d.eng+'</p>' +
+      '<p class="wfx-note">Specific thresholds, rules and prompts are proprietary and left out.</p></div>';
+  }
+
   var showcaseTimer = null;
 
   function select(key){
@@ -685,9 +920,16 @@ footer{
       '<div class="row">' +
         '<dl><dt>Problem</dt><dd>'+s.problem+'</dd><dt>What it replaced</dt><dd>'+s.replaced+'</dd></dl>' +
         '<dl><dt>How it is built</dt><dd>'+s.build+'</dd><dt>Tools</dt><dd class="tools">'+s.tools+'</dd></dl>' +
-      '</div>';
+      '</div>' + wfxHtml(s.key);
     void panel.offsetWidth;
     panel.classList.add("fade-enter");
+    var wb = panel.querySelector(".wfx-btn");
+    if(wb) wb.addEventListener("click", function(){
+      wfxOpen = wb.getAttribute("aria-expanded") !== "true";
+      wb.setAttribute("aria-expanded", wfxOpen ? "true" : "false");
+      wb.querySelector("span").textContent = wfxOpen ? "Hide detailed workflow" : "Detailed workflow";
+      document.getElementById("wfx").hidden = !wfxOpen;
+    });
     if(s.photos){
       var imgs = panel.querySelectorAll(".showcase img");
       var idx = 0;
@@ -1282,12 +1524,12 @@ footer{
      from the model itself) from the start, and the model files download in
      the background once the page has loaded (network only). A viewer is only
      started -- a short main-thread freeze while it builds the mesh -- when its
-     own panel is at least half on screen and scrolling has stopped, so the
+     own panel is coming onto the screen and scrolling has stopped, so the
      freeze lands on a still picture, never on another animation; the poster
      then crossfades into the turning ring. Each one renders only while its
      panel is on screen. */
   var viewerFrames = Array.prototype.slice.call(document.querySelectorAll(".ev-frame"));
-  var viewerSeen = new WeakMap(), viewerHalf = new WeakMap(), viewerBusy = null, lastScroll = 0;
+  var viewerSeen = new WeakMap(), viewerBusy = null, lastScroll = 0;
   function iframeOf(fr){ return fr.querySelector("iframe"); }
   function tellViewer(f){
     if(f.contentWindow && !f.hasAttribute("data-src")) f.contentWindow.postMessage({pwpEmbed: viewerSeen.get(f) ? "play" : "pause"}, "*");
@@ -1312,9 +1554,9 @@ footer{
   var viewerPoll = setInterval(function(){
     var waiting = viewerFrames.filter(function(fr){ return iframeOf(fr).hasAttribute("data-src"); });
     if(!waiting.length){ clearInterval(viewerPoll); return; }
-    if(viewerBusy || performance.now() - lastScroll < 400) return;
+    if(viewerBusy || performance.now() - lastScroll < 300) return;
     for(var i = 0; i < waiting.length; i++){
-      if(viewerHalf.get(iframeOf(waiting[i]))){ startViewer(iframeOf(waiting[i])); return; }
+      if(viewerSeen.get(iframeOf(waiting[i]))){ startViewer(iframeOf(waiting[i])); return; }
     }
   }, 250);
   if("IntersectionObserver" in window){
@@ -1322,16 +1564,19 @@ footer{
       entries.forEach(function(en){
         var f = iframeOf(en.target);
         viewerSeen.set(f, en.isIntersecting);
-        viewerHalf.set(f, en.intersectionRatio >= 0.5);
         tellViewer(f);
       });
-    }, {threshold:[0, .5]});
+    }, {threshold:0});
     viewerFrames.forEach(function(fr){ viewerIO.observe(fr); });
   } else {
-    viewerFrames.forEach(function(fr){ viewerSeen.set(iframeOf(fr), true); viewerHalf.set(iframeOf(fr), true); });
+    viewerFrames.forEach(function(fr){ viewerSeen.set(iframeOf(fr), true); });
   }
   function prefetchViewers(){
-    ["viewers/chevron/ch_model.js", "viewers/chevron/rt_diamonds.js", "viewers/band/band_model.js"].forEach(function(u){
+    var T = "https://cdn.jsdelivr.net/npm/three@0.169.0/";
+    ["viewers/chevron/ch_model.wasm", "viewers/chevron/ch_model.js", "viewers/chevron/rt_diamonds.js",
+     "viewers/band/band_model.wasm", "viewers/band/band_model.js",
+     T + "build/three.module.js", T + "examples/jsm/controls/OrbitControls.js",
+     T + "examples/jsm/environments/RoomEnvironment.js", T + "examples/jsm/utils/BufferGeometryUtils.js"].forEach(function(u){
       try { fetch(u).catch(function(){}); } catch(e){}
     });
   }

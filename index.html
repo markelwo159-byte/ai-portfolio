@@ -382,6 +382,16 @@ section.stage{padding-block:4px 20px;}
 .stagepanel .tagline{color:var(--accent);font-size:15px;margin:0 0 14px;}
 
 .flowwrap{width:100%;}
+.flowwrap.with-card{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.flowwrap.with-card .flow{flex:1 1 380px;min-width:0;}
+.stonecard{margin:0;width:150px;flex:0 0 150px;background:var(--bg2);border-radius:10px;overflow:hidden;position:relative;}
+.stonecard img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;}
+.stonecard-k{position:absolute;top:6px;left:6px;font-size:11px;font-weight:600;color:#1b2a44;background:rgba(255,255,255,.85);padding:2px 7px;border-radius:999px;}
+.stonecard figcaption{padding:8px 10px 10px;display:grid;gap:1px;font-size:12.5px;line-height:1.35;color:var(--ink);}
+.stonecard figcaption b{font-size:14px;}
+.stonecard figcaption .muted{color:var(--muted);}
+.stonecard-tag{justify-self:start;margin-top:5px;font-size:11px;font-weight:600;color:var(--good);border:1px solid var(--line);border-radius:999px;padding:1px 8px;}
+@media (max-width:640px){.flowwrap.with-card{justify-content:center;}}
 .showcase{position:relative;height:300px;background:var(--bg2);border-radius:10px;overflow:hidden;}
 .showcase img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity 1.1s ease;}
 .showcase img.on{opacity:1;}
@@ -680,7 +690,8 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       build:"A web app directed through Claude Code that links to WhatsApp, watches the supplier's channel, and parses each new stock sheet, whether Excel, PDF or text. Stones are added, updated or retired automatically, photos are cached, and everything lands in a searchable grid with 360\u00b0 video. One click exports a clean, self-contained page for a customer, with the supplier's details and costs stripped out.",
       tools:"Node.js and Express, directed by Claude \u00b7 WhatsApp Web bridge \u00b7 Excel and PDF parsing",
       replaced:"Scrolling raw supplier spreadsheets by hand and screenshotting stones to send customers.",
-      flow:[["Supplier sheets","via WhatsApp"],["Parse + sync","directed by Claude"],["Customer catalog","supplier hidden"]] },
+      flow:[["Supplier sheets","via WhatsApp"],["Parse + sync","directed by Claude"],["Customer catalog","supplier hidden"]],
+      card:{ img:"dd-stone.webp", alt:"Oval lab-grown pink diamond from the catalog", title:"1.05 ct Oval", line1:"Fancy Vivid Pink \u00b7 VVS2", line2:"IGI \u00b7 Lab-grown" } },
     { key:"tryon", title:"Virtual Try On", tagline:"Live face tracking, turned into a real time earring preview",
       problem:"No reliable way for a customer to judge the actual size or fit of a piece of jewelry before purchase.",
       build:"Face landmark detection runs entirely client side; no image is ever uploaded. The iris, a near constant 11.7mm across adults, serves as the scale reference for sizing the earring against the face. Verified accurate to roughly a 45 degree head turn, the working range for a phone held at arm's length.",
@@ -1024,6 +1035,14 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       '<p class="wfx-note">Specific thresholds, rules and prompts are proprietary and left out.</p></div>';
   }
 
+  // a sample of the customer-facing card a system produces (Diamond Desk)
+  function stoneCard(c){
+    return '<figure class="stonecard"><span class="stonecard-k">Sample customer card</span>' +
+      '<img src="'+c.img+'" alt="'+c.alt+'" width="360" height="360" loading="lazy">' +
+      '<figcaption><b>'+c.title+'</b><span>'+c.line1+'</span><span class="muted">'+c.line2+'</span>' +
+      '<span class="stonecard-tag">360\u00b0 video</span></figcaption></figure>';
+  }
+
   var showcaseTimer = null;
 
   function select(key){
@@ -1038,7 +1057,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       ? '<div class="showcase" id="showcase">' + s.photos.map(function(src,i){
           return '<img src="'+src+'" alt="Real marketing photo generated for Point West Pavilion" class="'+(i===0?'on':'')+'" loading="'+(i===0?'eager':'lazy')+'">';
         }).join('') + '</div>'
-      : '<div class="flowwrap">'+flowSvg(s.flow)+'</div>';
+      : '<div class="flowwrap'+(s.card ? ' with-card' : '')+'">'+flowSvg(s.flow)+(s.card ? stoneCard(s.card) : '')+'</div>';
     panel.innerHTML =
       '<h3>'+s.title+'</h3>' +
       '<p class="tagline">'+s.tagline+'</p>' +

@@ -127,6 +127,8 @@ h1.headline .weldwrap{position:relative;display:inline-block;}
 .chips{display:flex;flex-wrap:wrap;gap:7px;}
 .chip{background:var(--panel-2);padding:5px 11px;font-size:13px;border-radius:999px;color:var(--muted);white-space:nowrap;}
 .chip b{color:var(--ink);font-weight:500;}
+.chip.demo-link{color:var(--ink);text-decoration:none;border:1px solid var(--accent);background:transparent;}
+.chip.demo-link:hover{background:var(--panel-2);}
 
 h2{
   font-family:"Big Shoulders Display",sans-serif;font-weight:700;
@@ -518,6 +520,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       <span class="chip">AWS D17.1, Aerospace Certified</span>
       <span class="chip">Claude Code directed</span>
       <span class="chip">1:1 scale, live production</span>
+      <a class="chip demo-link" href="https://markelwo159-byte.github.io/liquid-glass-dashboards/" target="_blank" rel="noopener">Live demo: Liquid Glass Business Dashboards &#8599;</a>
     </div>
   </section>
 

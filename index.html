@@ -73,7 +73,9 @@ header.top{
 section[id],footer[id]{scroll-margin-top:64px;}
 header.top .mark{font-weight:600;letter-spacing:.04em;font-size:14px;}
 header.top nav{display:flex;gap:16px;font-size:13px;color:var(--muted);}
-header.top nav a{color:var(--muted);text-decoration:none;}
+header.top nav a{color:var(--muted);text-decoration:none;white-space:nowrap;}
+header.top .mark{white-space:nowrap;}
+@media (max-width:480px){header.top nav{gap:12px;}header.top nav .long{display:none;}header.top nav a[href="#field"]{text-transform:capitalize;}}
 header.top nav a:hover,header.top nav a:focus-visible{color:var(--ink);}
 
 /* ---------- compact hero ---------- */
@@ -483,6 +485,51 @@ section.field{padding-block:14px 6px;}
 @media (max-width:760px){.ev-viewers{grid-template-columns:1fr;}.ev-frame{height:290px;}}
 @media (prefers-reduced-motion:reduce){.ev-frame iframe,.ev-poster,.ev-load{transition:none;}.ev-load i{animation-duration:2.4s;}}
 
+/* ---------- web design: a swipeable reel of site walkthroughs ---------- */
+section.web{padding-block:14px 6px;}
+.reel{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:0;padding-bottom:6px;
+  overscroll-behavior-x:contain;scrollbar-width:none;cursor:grab;-webkit-overflow-scrolling:touch;}
+.reel::-webkit-scrollbar{display:none;}
+.reel.dragging{cursor:grabbing;scroll-snap-type:none;}
+.reel.dragging *{pointer-events:none;user-select:none;}
+.reel:focus-visible{outline:2px solid var(--good);outline-offset:4px;border-radius:14px;}
+.reel-card{flex:0 0 min(86%,760px);scroll-snap-align:start;scroll-snap-stop:always;margin:0;min-width:0;background:var(--panel);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;}
+.reel-card:last-child{scroll-snap-align:end;}
+.reel-media{position:relative;aspect-ratio:1280/846;background:var(--bg2);}
+.reel-media::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);}
+.reel-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+.reel-play{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(8,18,34,.78);color:var(--ink);display:grid;place-items:center;transition:transform .15s ease,background .2s ease;}
+@media (hover:hover){.reel-play:hover{background:rgba(8,18,34,.95);}.reel-arrows button:hover:not(:disabled){background:var(--panel-2);}}
+.reel-play:active{transform:scale(.96);}
+.reel-play:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
+.reel-play svg{width:18px;height:18px;}
+.reel-play .i-pause{display:none;}
+.reel-card.playing .reel-play .i-play{display:none;}
+.reel-card.playing .reel-play .i-pause{display:block;}
+.reel-text{padding:14px 18px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;}
+.reel-text .kind{width:100%;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);}
+.reel-text h3{margin:0;font-size:22px;font-family:"Big Shoulders Display",sans-serif;}
+.reel-text a.go{font-size:14px;font-weight:600;color:var(--good);text-decoration:none;white-space:nowrap;}
+.reel-text a.go:hover,.reel-text a.go:focus-visible{text-decoration:underline;}
+.reel-text p{margin:4px 0 0;width:100%;color:var(--muted);font-size:15px;line-height:1.5;max-width:62ch;}
+.reel-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;}
+.reel-dots{display:flex;gap:4px;}
+.reel-dots button{width:32px;height:44px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;}
+.reel-dots button::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s ease,width .2s ease;}
+.reel-dots button[aria-current="true"]::before{background:var(--accent);width:22px;border-radius:4px;}
+.reel-dots button:focus-visible{outline:2px solid var(--good);border-radius:6px;}
+.reel-arrows{display:flex;gap:8px;}
+.reel-arrows button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
+  display:grid;place-items:center;transition:background .2s ease,opacity .2s ease,transform .15s ease;}
+.reel-arrows button:active{transform:scale(.96);}
+.reel-arrows button:disabled{opacity:.35;cursor:default;}
+.reel-arrows button:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
+.reel-arrows svg{width:16px;height:16px;}
+@media (max-width:640px){.reel{margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px;}.reel-card{flex-basis:86%;}.reel-text h3{font-size:20px;}.reel-arrows{display:none;}}
+@media (prefers-reduced-motion:reduce){.reel-play,.reel-arrows button,.reel-dots button::before{transition:none;}}
+
 footer{
   background:var(--panel);border-radius:14px;padding:20px 22px;margin-top:22px;
   display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;align-items:baseline;
@@ -502,7 +549,8 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
   <span class="mark">Mark Elwood</span>
   <nav>
     <a href="#stage">Systems</a>
-    <a href="#field">Field evidence</a>
+    <a href="#web">Web design</a>
+    <a href="#field"><span class="long">Field </span>evidence</a>
     <a href="#contact">Contact</a>
   </nav>
 </header>
@@ -520,7 +568,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       <span class="chip">AWS D17.1, Aerospace Certified</span>
       <span class="chip">Claude Code directed</span>
       <span class="chip">1:1 scale, live production</span>
-      <a class="chip demo-link" href="https://markelwo159-byte.github.io/liquid-glass-dashboards/" target="_blank" rel="noopener">Live demo: Liquid Glass Business Dashboards &#8599;</a>
+      <a class="chip demo-link" href="#web">Web design: 3 live sites &#8595;</a>
     </div>
   </section>
 
@@ -600,6 +648,56 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
         </div>
       </div>
       <div class="dbanner" id="dBanner">Opening today's price list&hellip;</div>
+    </div>
+  </section>
+
+  <section class="web" id="web">
+    <h2>Web design</h2>
+    <p class="section-sub">Three sites designed and built by directing Claude Code, each with its own typefaces, photography and motion. Every one is live and tested on desktop and iPhone. Swipe through the walkthroughs, or open a site and try it.</p>
+    <div class="reel" id="reel" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Website walkthroughs">
+      <article class="reel-card" aria-roledescription="slide" aria-label="1 of 3">
+        <div class="reel-media">
+          <video muted playsinline loop preload="none" poster="walkthroughs/dashboards.jpg" data-src="walkthroughs/dashboards.mp4" aria-label="Walkthrough of Liquid Glass Business Dashboards"></video>
+          <button class="reel-play" type="button" aria-label="Play the Liquid Glass Business Dashboards walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
+        </div>
+        <div class="reel-text">
+          <span class="kind">Interactive dashboards</span>
+          <h3>Liquid Glass Business Dashboards</h3>
+          <a class="go" href="https://markelwo159-byte.github.io/liquid-glass-dashboards/" target="_blank" rel="noopener">Live site &#8599;</a>
+          <p>Three dashboards with sample data for a coffee roaster, a software sales team and a fitness app. Spring motion that follows the hand, rubber-band edges, a draggable deal board and three glass themes.</p>
+        </div>
+      </article>
+      <article class="reel-card" aria-roledescription="slide" aria-label="2 of 3">
+        <div class="reel-media">
+          <video muted playsinline loop preload="none" poster="walkthroughs/gym.jpg" data-src="walkthroughs/gym.mp4" aria-label="Walkthrough of Twenty Kilo"></video>
+          <button class="reel-play" type="button" aria-label="Play the Twenty Kilo walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
+        </div>
+        <div class="reel-text">
+          <span class="kind">Homepage</span>
+          <h3>Twenty Kilo</h3>
+          <a class="go" href="https://markelwo159-byte.github.io/strength-gym-homepage/" target="_blank" rel="noopener">Live site &#8599;</a>
+          <p>A concept homepage for a San Jose strength gym, built around the competition plate. Includes a working plate calculator that shows the plates on each side of the bar, plus a free-session booking form.</p>
+        </div>
+      </article>
+      <article class="reel-card" aria-roledescription="slide" aria-label="3 of 3">
+        <div class="reel-media">
+          <video muted playsinline loop preload="none" poster="walkthroughs/architecture.jpg" data-src="walkthroughs/architecture.mp4" aria-label="Walkthrough of Slough &amp; Ridge"></video>
+          <button class="reel-play" type="button" aria-label="Play the Slough &amp; Ridge walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
+        </div>
+        <div class="reel-text">
+          <span class="kind">Portfolio site</span>
+          <h3>Slough &amp; Ridge</h3>
+          <a class="go" href="https://markelwo159-byte.github.io/architecture-portfolio/" target="_blank" rel="noopener">Live site &#8599;</a>
+          <p>A concept portfolio for a timber architecture studio in Northern California. Its elevations and two floor plans are drawn to scale and draw themselves as each one comes into view.</p>
+        </div>
+      </article>
+    </div>
+    <div class="reel-bar">
+      <div class="reel-dots" id="reelDots" aria-label="Choose a walkthrough"></div>
+      <div class="reel-arrows">
+        <button type="button" id="reelPrev" aria-label="Previous walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" id="reelNext" aria-label="Next walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
     </div>
   </section>
 
@@ -1796,6 +1894,83 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
     }
     requestAnimationFrame(emberFrame);
   }
+})();
+/* web design reel: swipe, drag with a mouse, arrows and dots; the walkthrough in view plays muted, the rest pause */
+(function(){
+  var reel = document.getElementById('reel'); if (!reel) return;
+  var cards = [].slice.call(reel.querySelectorAll('.reel-card'));
+  var dots = document.getElementById('reelDots'), prev = document.getElementById('reelPrev'), next = document.getElementById('reelNext');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = 0, onScreen = false, userPaused = {};
+  cards.forEach(function(c, i){
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Show walkthrough ' + (i + 1) + ' of ' + cards.length);
+    b.addEventListener('click', function(){ go(i); }); dots.appendChild(b);
+  });
+  function go(i){ i = Math.max(0, Math.min(cards.length - 1, i)); reel.scrollTo({ left: Math.min(reel.scrollWidth - reel.clientWidth, cards[i].offsetLeft - cards[0].offsetLeft), behavior: reduced ? 'auto' : 'smooth' }); }
+  prev.addEventListener('click', function(){ go(current - 1); });
+  next.addEventListener('click', function(){ go(current + 1); });
+  reel.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
+  });
+  function load(v){ if (!v.src && v.dataset.src) { v.src = v.dataset.src; } }
+  function play(i){
+    var v = cards[i].querySelector('video'); load(v);
+    var p = v.play(); if (p && p.catch) p.catch(function(){});
+  }
+  function sync(){
+    cards.forEach(function(c, i){
+      var v = c.querySelector('video');
+      if (i === current && onScreen && !reduced && !userPaused[i]) play(i); else if (!v.paused) v.pause();
+    });
+    [].slice.call(dots.children).forEach(function(d, i){ d.setAttribute('aria-current', i === current ? 'true' : 'false'); });
+    prev.disabled = current === 0; next.disabled = current === cards.length - 1;
+  }
+  cards.forEach(function(c, i){
+    var v = c.querySelector('video'), btn = c.querySelector('.reel-play');
+    v.addEventListener('play', function(){ c.classList.add('playing'); btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Play', 'Pause')); });
+    v.addEventListener('pause', function(){ c.classList.remove('playing'); btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Pause', 'Play')); });
+    function toggle(){
+      if (v.paused) { userPaused[i] = false; if (i !== current) go(i); play(i); } else { userPaused[i] = true; v.pause(); }
+    }
+    btn.addEventListener('click', toggle);
+    v.addEventListener('click', toggle);
+  });
+  // which card is in the reel's view
+  var cardIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if (en.isIntersecting && en.intersectionRatio >= 0.6) { current = cards.indexOf(en.target); sync(); } });
+  }, { root: reel, threshold: [0.6] });
+  cards.forEach(function(c){ cardIO.observe(c); });
+  // play only while the reel is on screen
+  new IntersectionObserver(function(entries){ onScreen = entries[0].isIntersecting; sync(); }, { threshold: 0.35 }).observe(reel);
+  // a mouse can drag the reel like a finger
+  var down = null;
+  reel.addEventListener('pointerdown', function(e){
+    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('a,button')) return;
+    down = { x: e.clientX, left: reel.scrollLeft, moved: false };
+  });
+  window.addEventListener('pointermove', function(e){
+    if (!down) return;
+    var dx = e.clientX - down.x;
+    if (!down.moved && Math.abs(dx) > 6) { down.moved = true; reel.classList.add('dragging'); }
+    if (down.moved) reel.scrollLeft = down.left - dx;
+  });
+  window.addEventListener('pointerup', function(e){
+    if (!down) return;
+    var d = down; down = null;
+    if (!d.moved) return;
+    var dx = e.clientX - d.x;
+    reel.classList.remove('dragging');
+    var target = current;
+    if (dx < -40) target = Math.min(cards.length - 1, Math.round((d.left) / (cards[1].offsetLeft - cards[0].offsetLeft)) + 1);
+    else if (dx > 40) target = Math.max(0, Math.round((d.left) / (cards[1].offsetLeft - cards[0].offsetLeft)) - 1);
+    go(target);
+    // swallow the click that ends a drag
+    var stop = function(ev){ ev.stopPropagation(); ev.preventDefault(); };
+    reel.addEventListener('click', stop, true);
+    setTimeout(function(){ reel.removeEventListener('click', stop, true); }, 0);
+  });
+  sync();
 })();
 </script>
 </body>

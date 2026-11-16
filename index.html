@@ -485,50 +485,42 @@ section.field{padding-block:14px 6px;}
 @media (max-width:760px){.ev-viewers{grid-template-columns:1fr;}.ev-frame{height:290px;}}
 @media (prefers-reduced-motion:reduce){.ev-frame iframe,.ev-poster,.ev-load{transition:none;}.ev-load i{animation-duration:2.4s;}}
 
-/* ---------- web design: a swipeable reel of site walkthroughs ---------- */
-section.web{padding-block:14px 6px;}
-.reel{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:0;padding-bottom:6px;
-  overscroll-behavior-x:contain;scrollbar-width:none;cursor:grab;-webkit-overflow-scrolling:touch;}
-.reel::-webkit-scrollbar{display:none;}
-.reel.dragging{cursor:grabbing;scroll-snap-type:none;}
-.reel.dragging *{pointer-events:none;user-select:none;}
-.reel:focus-visible{outline:2px solid var(--good);outline-offset:4px;border-radius:14px;}
-.reel-card{flex:0 0 min(86%,760px);scroll-snap-align:start;scroll-snap-stop:always;margin:0;min-width:0;background:var(--panel);border-radius:14px;overflow:hidden;
-  display:flex;flex-direction:column;}
-.reel-card:last-child{scroll-snap-align:end;}
-.reel-media{position:relative;aspect-ratio:1280/846;background:var(--bg2);}
-.reel-media::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);}
-.reel-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
-.reel-play{position:absolute;right:12px;bottom:12px;width:44px;height:44px;border-radius:50%;border:0;padding:0;cursor:pointer;
-  background:rgba(8,18,34,.78);color:var(--ink);display:grid;place-items:center;transition:transform .15s ease,background .2s ease;}
-@media (hover:hover){.reel-play:hover{background:rgba(8,18,34,.95);}.reel-arrows button:hover:not(:disabled){background:var(--panel-2);}}
-.reel-play:active{transform:scale(.96);}
-.reel-play:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
-.reel-play svg{width:18px;height:18px;}
-.reel-play .i-pause{display:none;}
-.reel-card.playing .reel-play .i-play{display:none;}
-.reel-card.playing .reel-play .i-pause{display:block;}
-.reel-text{padding:14px 18px 18px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;}
-.reel-text .kind{width:100%;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);}
-.reel-text h3{margin:0;font-size:22px;font-family:"Big Shoulders Display",sans-serif;}
-.reel-text a.go{font-size:14px;font-weight:600;color:var(--good);text-decoration:none;white-space:nowrap;}
-.reel-text a.go:hover,.reel-text a.go:focus-visible{text-decoration:underline;}
-.reel-text p{margin:4px 0 0;width:100%;color:var(--muted);font-size:15px;line-height:1.5;max-width:62ch;}
-.reel-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;}
-.reel-dots{display:flex;gap:4px;}
-.reel-dots button{width:32px;height:44px;border:0;padding:0;background:none;cursor:pointer;display:grid;place-items:center;}
-.reel-dots button::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--line);transition:background .2s ease,width .2s ease;}
-.reel-dots button[aria-current="true"]::before{background:var(--accent);width:22px;border-radius:4px;}
-.reel-dots button:focus-visible{outline:2px solid var(--good);border-radius:6px;}
-.reel-arrows{display:flex;gap:8px;}
-.reel-arrows button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;
-  display:grid;place-items:center;transition:background .2s ease,opacity .2s ease,transform .15s ease;}
-.reel-arrows button:active{transform:scale(.96);}
-.reel-arrows button:disabled{opacity:.35;cursor:default;}
-.reel-arrows button:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
-.reel-arrows svg{width:16px;height:16px;}
-@media (max-width:640px){.reel{margin-inline:-16px;padding-inline:16px;scroll-padding-inline:16px;}.reel-card{flex-basis:86%;}.reel-text h3{font-size:20px;}.reel-arrows{display:none;}}
-@media (prefers-reduced-motion:reduce){.reel-play,.reel-arrows button,.reel-dots button::before{transition:none;}}
+/* ---------- web design tab: a walkthrough player and the three sites ---------- */
+.jump{display:block;scroll-margin-top:64px;}
+.sites{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:14px;align-items:start;}
+.sites-player{position:relative;aspect-ratio:1280/846;border-radius:10px;overflow:hidden;background:var(--bg2);}
+.sites-player video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;}
+.sites-play{position:absolute;right:10px;bottom:10px;width:44px;height:44px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(8,18,34,.8);color:var(--ink);display:grid;place-items:center;transition:transform .15s ease,background .2s ease;}
+.sites-play:active{transform:scale(.96);}
+.sites-play:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
+.sites-play svg{width:18px;height:18px;}
+.sites-play .i-pause{display:none;}
+.sites.playing .sites-play .i-play{display:none;}
+.sites.playing .sites-play .i-pause{display:block;}
+.sites-side{display:flex;flex-direction:column;gap:12px;min-width:0;}
+.sites-picks{display:flex;flex-direction:column;gap:8px;}
+.sites-pick{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:center;padding:6px;min-height:44px;border-radius:9px;
+  border:1px solid var(--line-soft);background:var(--bg2);color:var(--ink);font:inherit;text-align:left;cursor:pointer;
+  transition:border-color .2s ease,background .2s ease,transform .15s ease;}
+.sites-pick img{width:76px;height:auto;aspect-ratio:1280/846;object-fit:cover;border-radius:5px;display:block;}
+.sites-pick b{display:block;font-size:13.5px;font-weight:600;line-height:1.25;}
+.sites-pick small{display:block;font-size:12px;color:var(--muted);margin-top:2px;}
+.sites-pick[aria-pressed="true"]{border-color:var(--accent);background:var(--panel-2);}
+.sites-pick:active{transform:scale(.96);}
+.sites-pick:focus-visible{outline:2px solid var(--good);outline-offset:2px;}
+.sites-live{white-space:nowrap;font-size:14px;font-weight:600;color:var(--good);text-decoration:none;}
+.sites-live:hover,.sites-live:focus-visible{text-decoration:underline;}
+@media (hover:hover){.sites-play:hover{background:rgba(8,18,34,.95);}.sites-pick:hover{border-color:var(--line);}}
+@media (max-width:760px){
+  .sites{grid-template-columns:1fr;}
+  .sites-picks{flex-direction:row;}
+  .sites-pick{flex:1 1 0;grid-template-columns:1fr;gap:6px;}
+  .sites-pick img{width:100%;}
+  .sites-pick small{display:none;}
+  .sites-pick b{font-size:12.5px;}
+}
+@media (prefers-reduced-motion:reduce){.sites-play,.sites-pick{transition:none;}}
 
 footer{
   background:var(--panel);border-radius:14px;padding:20px 22px;margin-top:22px;
@@ -605,6 +597,7 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
   </section>
 
   <section class="stage" id="stage">
+    <span id="web" class="jump" aria-hidden="true"></span>
     <h2>Sample systems shipped</h2>
     <p class="section-sub">Select any system below to see how it works.</p>
     <div class="stagebox">
@@ -648,56 +641,6 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
         </div>
       </div>
       <div class="dbanner" id="dBanner">Opening today's price list&hellip;</div>
-    </div>
-  </section>
-
-  <section class="web" id="web">
-    <h2>Web design</h2>
-    <p class="section-sub">Three sites designed and built by directing Claude Code, each with its own typefaces, photography and motion. Every one is live and tested on desktop and iPhone. Swipe through the walkthroughs, or open a site and try it.</p>
-    <div class="reel" id="reel" tabindex="0" role="region" aria-roledescription="carousel" aria-label="Website walkthroughs">
-      <article class="reel-card" aria-roledescription="slide" aria-label="1 of 3">
-        <div class="reel-media">
-          <video muted playsinline loop preload="none" poster="walkthroughs/dashboards.jpg" data-src="walkthroughs/dashboards.mp4" aria-label="Walkthrough of Liquid Glass Business Dashboards"></video>
-          <button class="reel-play" type="button" aria-label="Play the Liquid Glass Business Dashboards walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
-        </div>
-        <div class="reel-text">
-          <span class="kind">Interactive dashboards</span>
-          <h3>Liquid Glass Business Dashboards</h3>
-          <a class="go" href="https://markelwo159-byte.github.io/liquid-glass-dashboards/" target="_blank" rel="noopener">Live site &#8599;</a>
-          <p>Three dashboards with sample data for a coffee roaster, a software sales team and a fitness app. Spring motion that follows the hand, rubber-band edges, a draggable deal board and three glass themes.</p>
-        </div>
-      </article>
-      <article class="reel-card" aria-roledescription="slide" aria-label="2 of 3">
-        <div class="reel-media">
-          <video muted playsinline loop preload="none" poster="walkthroughs/gym.jpg" data-src="walkthroughs/gym.mp4" aria-label="Walkthrough of Twenty Kilo"></video>
-          <button class="reel-play" type="button" aria-label="Play the Twenty Kilo walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
-        </div>
-        <div class="reel-text">
-          <span class="kind">Homepage</span>
-          <h3>Twenty Kilo</h3>
-          <a class="go" href="https://markelwo159-byte.github.io/strength-gym-homepage/" target="_blank" rel="noopener">Live site &#8599;</a>
-          <p>A concept homepage for a San Jose strength gym, built around the competition plate. Includes a working plate calculator that shows the plates on each side of the bar, plus a free-session booking form.</p>
-        </div>
-      </article>
-      <article class="reel-card" aria-roledescription="slide" aria-label="3 of 3">
-        <div class="reel-media">
-          <video muted playsinline loop preload="none" poster="walkthroughs/architecture.jpg" data-src="walkthroughs/architecture.mp4" aria-label="Walkthrough of Slough &amp; Ridge"></video>
-          <button class="reel-play" type="button" aria-label="Play the Slough &amp; Ridge walkthrough"><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg></button>
-        </div>
-        <div class="reel-text">
-          <span class="kind">Portfolio site</span>
-          <h3>Slough &amp; Ridge</h3>
-          <a class="go" href="https://markelwo159-byte.github.io/architecture-portfolio/" target="_blank" rel="noopener">Live site &#8599;</a>
-          <p>A concept portfolio for a timber architecture studio in Northern California. Its elevations and two floor plans are drawn to scale and draw themselves as each one comes into view.</p>
-        </div>
-      </article>
-    </div>
-    <div class="reel-bar">
-      <div class="reel-dots" id="reelDots" aria-label="Choose a walkthrough"></div>
-      <div class="reel-arrows">
-        <button type="button" id="reelPrev" aria-label="Previous walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button type="button" id="reelNext" aria-label="Next walkthrough"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      </div>
     </div>
   </section>
 
@@ -755,10 +698,10 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var ICONS = {
+    web:'<rect x="2.5" y="4" width="19" height="16" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M2.5 8.5h19" stroke="currentColor" stroke-width="1.6"/><circle cx="5.3" cy="6.3" r=".8" fill="currentColor"/><circle cx="7.8" cy="6.3" r=".8" fill="currentColor"/><path d="M6 12.5h6M6 15.5h4M14.5 12h3.5v4.5h-3.5z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
     diamond:'<path d="M6 3h12l4 6-10 12L2 9z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M2 9h20M9 3l3 18M15 3l-3 18" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>',
     ebay:'<path d="M3 12.5V4a1 1 0 0 1 1-1h8.5L21 11.5 12.5 20z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.6" stroke="currentColor" stroke-width="1.5" fill="none"/>',
     catalog:'<path d="M3 7h18M3 12h18M3 17h12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>',
-    imaging:'<rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3 17l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
     tryon:'<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.6" fill="none"/>',
     preview3d:'<path d="M12 2l9 5v10l-9 5-9-5V7l9-5z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M3 7l9 5 9-5M12 12v10" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
     seo:'<circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M20 20l-5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 12l2-3 2 2 3-4" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
@@ -774,6 +717,16 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       tools:"Python, directed by Claude · FTP · Shopify Admin API",
       replaced:"Manual price and stock verification across the full catalog, repeated daily, with no reliable way to catch a missed update before a customer did.",
       flow:[["Supplier","FTP feed"],["Diff + reprice","directed by Claude"],["Shopify","live same day"]] },
+    { key:"web", title:"Web Design", tagline:"Three live websites, designed from a brief and built through Claude Code",
+      problem:"A site gets judged in seconds. Pages generated by AI or built from templates tend to share the same fonts, stock art and layouts, and they often break on a phone.",
+      build:"Each site starts from a written design brief built around its subject: a set of business dashboards with spring motion and glass themes, a strength gym homepage with a working plate calculator, and an architecture studio portfolio whose scale drawings draw themselves. Claude Code builds against the brief; every site gets its own typefaces and imagery, and is reviewed screen by screen on desktop and a real iPhone before it is published.",
+      tools:"HTML, CSS and JavaScript, directed by Claude · headless browser tests · accessibility and security checks · GitHub Pages",
+      replaced:"Hiring a designer and a front-end developer for each site, or settling for a page-builder template that looks like every other site.",
+      sites:[
+        { name:"Liquid Glass Dashboards", kind:"Interactive dashboards", slug:"dashboards", url:"https://markelwo159-byte.github.io/liquid-glass-dashboards/" },
+        { name:"Twenty Kilo", kind:"Gym homepage", slug:"gym", url:"https://markelwo159-byte.github.io/strength-gym-homepage/" },
+        { name:"Slough &amp; Ridge", kind:"Architecture portfolio", slug:"architecture", url:"https://markelwo159-byte.github.io/architecture-portfolio/" }
+      ] },
     { key:"research", title:"Trading System", tagline:"Automated futures trading: research, execution and risk, end to end",
       problem:"Most retail trading systems are fitted to past data and fail live: their backtests see information they would not have had in the moment, ignore execution costs, and are judged on profit instead of risk.",
       build:"An automated trading system for Nasdaq-100 and S&P 500 futures, built end to end through Claude. A research pipeline runs over five years of market data down to the second: a vectorized backtester screens ideas in minutes, and an event-driven engine replays every fill second by second with no look-ahead. Entries, exits, stop placement, position sizing and execution were each researched as separate problems across thousands of logged experiments, then run live through a broker API under automated monitoring.",
@@ -811,12 +764,6 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       tools:"CAD, directed by Claude · three.js · lightweight STL",
       replaced:"A flat sketch as the only reference available before a design went to metal.",
       flow:[["Design prompt","plus reference"],["CAD + shaders","directed by Claude"],["3D link","sent to customer"]] },
-    { key:"imaging", title:"Image Pipeline", tagline:"A raw supplier photo, turned store ready automatically",
-      problem:"New product photography arrives by the thousand. Each image needs the same cleanup before it is publishable, at a volume no single editor can sustain.",
-      build:"An automated pipeline strips the background, recolors it to match the storefront palette, then resizes and centers every photo onto one consistent canvas: a photo shot in a supplier's warehouse is normalized to the site's visual standard.",
-      tools:"Python, directed by Claude · image processing",
-      replaced:"Editing every incoming photo by hand, one at a time, at a volume no single person could sustain.",
-      flow:[["Raw photo","from supplier"],["Clean + resize","directed by Claude"],["Store ready","image, same shape"]] },
     { key:"social", title:"Social Automation", tagline:"A content calendar, built and scheduled on its own",
       problem:"A real posting cadence across several platforms means writing captions, selecting images, and scheduling each post by hand, most days of the week: difficult to sustain manually at a consistent standard.",
       build:"A Python pipeline, directed through Claude, drafts on brand captions, selects images, applies the store's monogram, and schedules the batch to Instagram and Facebook at once.",
@@ -832,6 +779,16 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
   ];
 
   var details = {
+ "web": {
+  "steps": [
+   ["Brief", "A written brief for each site: who it is for, the one job each page does, and the details only that subject would have, from plate colors to drawing conventions."],
+   ["Direct", "Typefaces, palette, layout and motion are chosen for the subject, and Claude Code builds the pages against the brief."],
+   ["Review", "Every screen is checked by eye at desktop and phone sizes, and anything that looks generic, misaligned or hard to read is sent back."],
+   ["Test", "Headless-browser tests click through every real path on every page, and accessibility and pre-deploy security checks must pass."],
+   ["Publish", "Each site goes live on GitHub Pages and is checked again on the live address and on a real iPhone."]
+  ],
+  "eng": "Plain HTML, CSS and JavaScript with no frameworks, written by Claude Code: self-hosted fonts, spring-based motion that can be grabbed mid-move, and automated browser tests that run before every release."
+ },
  "research": {
   "steps": [
    [
@@ -964,31 +921,6 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
    ]
   ],
   "eng": "Python parametric CAD (build123d) and Blender, directed by Claude. Viewers built on three.js and WebGL; the two rings on this page run on the same code."
- },
- "imaging": {
-  "steps": [
-   [
-    "Intake",
-    "New supplier photos are collected as products are imported."
-   ],
-   [
-    "Isolate",
-    "The background is removed and the piece separated from it."
-   ],
-   [
-    "Recolor and place",
-    "The background is set to the storefront palette, and every piece is scaled and centered on one standard canvas."
-   ],
-   [
-    "Publish",
-    "Images are uploaded to the product and grouped, so each variant (metal, size) shows its own photos."
-   ],
-   [
-    "Cache",
-    "Processed results are cached, so later runs skip finished images and handle only new ones."
-   ]
-  ],
-  "eng": "Python image processing and the Shopify Admin API, directed by Claude. Runs in bulk, without manual editing."
  },
  "social": {
   "steps": [
@@ -1144,6 +1076,45 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       '<span class="stonecard-tag">360\u00b0 video</span></figcaption></figure>';
   }
 
+  // the web design tab: one walkthrough at a time, with the three sites to pick from
+  var sitesIO = null, siteIdx = 0;
+  function sitesHtml(list){
+    var PLAY='<svg class="i-play" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" fill="currentColor"/></svg>';
+    var cur = list[siteIdx];
+    return '<div class="sites">' +
+      '<div class="sites-player"><video muted playsinline loop preload="none" poster="walkthroughs/'+cur.slug+'.jpg" data-src="walkthroughs/'+cur.slug+'.mp4" aria-label="Walkthrough of '+cur.name+'"></video>' +
+        '<button class="sites-play" type="button" aria-label="Play the walkthrough">'+PLAY+'</button></div>' +
+      '<div class="sites-side"><div class="sites-picks" role="group" aria-label="Choose a site">' +
+        list.map(function(x, i){
+          return '<button class="sites-pick" type="button" data-i="'+i+'" aria-pressed="'+(i===siteIdx)+'"><img src="walkthroughs/'+x.slug+'.jpg" alt="" width="1280" height="846" loading="lazy"><span><b>'+x.name+'</b><small>'+x.kind+'</small></span></button>';
+        }).join('') +
+      '</div><a class="sites-live" href="'+cur.url+'" target="_blank" rel="noopener">Open the live site &#8599;</a></div></div>';
+  }
+  function wireSites(list){
+    var box = panel.querySelector(".sites"); if(!box) return;
+    var v = box.querySelector("video"), btn = box.querySelector(".sites-play"), live = box.querySelector(".sites-live");
+    var visible = false, userPaused = false;
+    function play(){ if(!v.src) v.src = v.getAttribute("data-src"); var pr = v.play(); if(pr && pr.catch) pr.catch(function(){}); }
+    function sync(){ if(visible && !userPaused && !reduced) play(); else if(!v.paused) v.pause(); }
+    v.addEventListener("play", function(){ box.classList.add("playing"); btn.setAttribute("aria-label","Pause the walkthrough"); });
+    v.addEventListener("pause", function(){ box.classList.remove("playing"); btn.setAttribute("aria-label","Play the walkthrough"); });
+    function toggle(){ if(v.paused){ userPaused = false; play(); } else { userPaused = true; v.pause(); } }
+    btn.addEventListener("click", toggle); v.addEventListener("click", toggle);
+    Array.prototype.forEach.call(box.querySelectorAll(".sites-pick"), function(b){
+      b.addEventListener("click", function(){
+        var i = +b.getAttribute("data-i"); if(i === siteIdx) return;
+        siteIdx = i; var x = list[i];
+        Array.prototype.forEach.call(box.querySelectorAll(".sites-pick"), function(o){ o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+        v.pause(); v.removeAttribute("src"); v.setAttribute("data-src", "walkthroughs/"+x.slug+".mp4"); v.poster = "walkthroughs/"+x.slug+".jpg";
+        v.setAttribute("aria-label", "Walkthrough of "+x.name.replace("&amp;","&")); v.load();
+        live.href = x.url;
+        userPaused = false; sync();
+      });
+    });
+    sitesIO = new IntersectionObserver(function(en){ visible = en[0].isIntersecting; sync(); }, { threshold: 0.5 });
+    sitesIO.observe(v);
+  }
+
   var showcaseTimer = null;
 
   function select(key){
@@ -1153,8 +1124,9 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       c.setAttribute("aria-selected", c.getAttribute("data-key")===key ? "true":"false");
     });
     if(showcaseTimer){ clearInterval(showcaseTimer); showcaseTimer = null; }
+    if(sitesIO){ sitesIO.disconnect(); sitesIO = null; }
     panel.classList.remove("fade-enter");
-    var media = s.photos
+    var media = s.sites ? sitesHtml(s.sites) : s.photos
       ? '<div class="showcase" id="showcase">' + s.photos.map(function(src,i){
           return '<img src="'+src+'" alt="Real marketing photo generated for Point West Pavilion" class="'+(i===0?'on':'')+'" loading="'+(i===0?'eager':'lazy')+'">';
         }).join('') + '</div>'
@@ -1176,7 +1148,9 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
       wb.querySelector("span").textContent = wfxOpen ? "Hide detailed workflow" : "Detailed workflow";
       document.getElementById("wfx").hidden = !wfxOpen;
     });
-    if(s.photos){
+    if(s.sites){
+      wireSites(s.sites);
+    } else if(s.photos){
       var imgs = panel.querySelectorAll(".showcase img");
       var idx = 0;
       if(!reduced && imgs.length>1){
@@ -1550,7 +1524,11 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
     requestAnimationFrame(frame);
   }
 
-  select(systems[0].key);
+  select(location.hash === "#web" ? "web" : systems[0].key);
+  Array.prototype.forEach.call(document.querySelectorAll('a[href="#web"]'), function(a){
+    a.addEventListener("click", function(){ select("web"); });
+  });
+  window.addEventListener("hashchange", function(){ if(location.hash === "#web") select("web"); });
 
   /* watch it work: a tiny storyboard. a file opens, rows get checked and
      each spits out a quantity and a price, the sheet slides away, and the
@@ -1894,83 +1872,6 @@ footer a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border
     }
     requestAnimationFrame(emberFrame);
   }
-})();
-/* web design reel: swipe, drag with a mouse, arrows and dots; the walkthrough in view plays muted, the rest pause */
-(function(){
-  var reel = document.getElementById('reel'); if (!reel) return;
-  var cards = [].slice.call(reel.querySelectorAll('.reel-card'));
-  var dots = document.getElementById('reelDots'), prev = document.getElementById('reelPrev'), next = document.getElementById('reelNext');
-  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var current = 0, onScreen = false, userPaused = {};
-  cards.forEach(function(c, i){
-    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Show walkthrough ' + (i + 1) + ' of ' + cards.length);
-    b.addEventListener('click', function(){ go(i); }); dots.appendChild(b);
-  });
-  function go(i){ i = Math.max(0, Math.min(cards.length - 1, i)); reel.scrollTo({ left: Math.min(reel.scrollWidth - reel.clientWidth, cards[i].offsetLeft - cards[0].offsetLeft), behavior: reduced ? 'auto' : 'smooth' }); }
-  prev.addEventListener('click', function(){ go(current - 1); });
-  next.addEventListener('click', function(){ go(current + 1); });
-  reel.addEventListener('keydown', function(e){
-    if (e.key === 'ArrowRight') { e.preventDefault(); go(current + 1); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); go(current - 1); }
-  });
-  function load(v){ if (!v.src && v.dataset.src) { v.src = v.dataset.src; } }
-  function play(i){
-    var v = cards[i].querySelector('video'); load(v);
-    var p = v.play(); if (p && p.catch) p.catch(function(){});
-  }
-  function sync(){
-    cards.forEach(function(c, i){
-      var v = c.querySelector('video');
-      if (i === current && onScreen && !reduced && !userPaused[i]) play(i); else if (!v.paused) v.pause();
-    });
-    [].slice.call(dots.children).forEach(function(d, i){ d.setAttribute('aria-current', i === current ? 'true' : 'false'); });
-    prev.disabled = current === 0; next.disabled = current === cards.length - 1;
-  }
-  cards.forEach(function(c, i){
-    var v = c.querySelector('video'), btn = c.querySelector('.reel-play');
-    v.addEventListener('play', function(){ c.classList.add('playing'); btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Play', 'Pause')); });
-    v.addEventListener('pause', function(){ c.classList.remove('playing'); btn.setAttribute('aria-label', btn.getAttribute('aria-label').replace('Pause', 'Play')); });
-    function toggle(){
-      if (v.paused) { userPaused[i] = false; if (i !== current) go(i); play(i); } else { userPaused[i] = true; v.pause(); }
-    }
-    btn.addEventListener('click', toggle);
-    v.addEventListener('click', toggle);
-  });
-  // which card is in the reel's view
-  var cardIO = new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ if (en.isIntersecting && en.intersectionRatio >= 0.6) { current = cards.indexOf(en.target); sync(); } });
-  }, { root: reel, threshold: [0.6] });
-  cards.forEach(function(c){ cardIO.observe(c); });
-  // play only while the reel is on screen
-  new IntersectionObserver(function(entries){ onScreen = entries[0].isIntersecting; sync(); }, { threshold: 0.35 }).observe(reel);
-  // a mouse can drag the reel like a finger
-  var down = null;
-  reel.addEventListener('pointerdown', function(e){
-    if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('a,button')) return;
-    down = { x: e.clientX, left: reel.scrollLeft, moved: false };
-  });
-  window.addEventListener('pointermove', function(e){
-    if (!down) return;
-    var dx = e.clientX - down.x;
-    if (!down.moved && Math.abs(dx) > 6) { down.moved = true; reel.classList.add('dragging'); }
-    if (down.moved) reel.scrollLeft = down.left - dx;
-  });
-  window.addEventListener('pointerup', function(e){
-    if (!down) return;
-    var d = down; down = null;
-    if (!d.moved) return;
-    var dx = e.clientX - d.x;
-    reel.classList.remove('dragging');
-    var target = current;
-    if (dx < -40) target = Math.min(cards.length - 1, Math.round((d.left) / (cards[1].offsetLeft - cards[0].offsetLeft)) + 1);
-    else if (dx > 40) target = Math.max(0, Math.round((d.left) / (cards[1].offsetLeft - cards[0].offsetLeft)) - 1);
-    go(target);
-    // swallow the click that ends a drag
-    var stop = function(ev){ ev.stopPropagation(); ev.preventDefault(); };
-    reel.addEventListener('click', stop, true);
-    setTimeout(function(){ reel.removeEventListener('click', stop, true); }, 0);
-  });
-  sync();
 })();
 </script>
 </body>
